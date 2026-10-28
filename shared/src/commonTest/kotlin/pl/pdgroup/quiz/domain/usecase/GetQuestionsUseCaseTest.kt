@@ -1,0 +1,82 @@
+package pl.pdgroup.quiz.domain.usecase
+
+import kotlinx.coroutines.test.runTest
+import pl.pdgroup.quiz.domain.model.Difficulty
+import pl.pdgroup.quiz.domain.model.Question
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+
+class GetQuestionsUseCaseTest {
+
+    private lateinit var getQuestionsUseCase: GetQuestionsUseCase
+    private lateinit var fakeRepository: FakeQuizRepository
+
+    @BeforeTest
+    fun setUp() {
+        fakeRepository = FakeQuizRepository()
+        getQuestionsUseCase = GetQuestionsUseCase(fakeRepository)
+    }
+
+    @Test
+    fun invoke_returns_failure_when_repository_returns_less_than_7_questions() = runTest {
+        val questions = List(5) { createQuestion("Q$it") }
+        fakeRepository.questionsToReturn = questions
+
+        val result = getQuestionsUseCase("Any Category", Difficulty.EASY)
+
+        assertTrue(result.isFailure)
+        result.onFailure { error ->
+            assertTrue(error.message!!.contains("Not enough questions available"))
+        }
+    }
+
+    @Test
+    fun invoke_returns_failure_when_repository_throws_exception() = runTest {
+        fakeRepository.shouldThrowException = true
+
+        val result = getQuestionsUseCase("Any Category", Difficulty.HARD)
+
+        assertTrue(result.isFailure)
+        result.onFailure { error ->
+            assertEquals("Network error", error.message)
+        }
+    }
+
+    @Test
+    fun invoke_returns_exact_7_questions_when_repository_returns_7_questions() = runTest {
+        val questions = List(7) { createQuestion("Q$it") }
+        fakeRepository.questionsToReturn = questions
+
+        val result = getQuestionsUseCase("Any Category", Difficulty.MEDIUM)
+
+        assertTrue(result.isSuccess)
+        val fetchedQuestions = result.getOrNull()
+        assertEquals(7, fetchedQuestions?.size)
+    }
+
+    @Test
+    fun invoke_returns_exactly_7_questions_when_repository_returns_more_than_7_questions() =
+        runTest {
+            val questions = List(15) { createQuestion("Q$it") }
+            fakeRepository.questionsToReturn = questions
+
+            val result = getQuestionsUseCase("Any Category", Difficulty.HARD)
+
+            assertTrue(result.isSuccess)
+            val fetchedQuestions = result.getOrNull()
+            assertEquals(7, fetchedQuestions?.size)
+        }
+
+    private fun createQuestion(id: String): Question {
+        return Question(
+            type = "multiple",
+            difficulty = Difficulty.EASY,
+            category = "General Knowledge",
+            question = "Question $id",
+            correctAnswer = "True",
+            incorrectAnswers = listOf("False1", "False2", "False3")
+        )
+    }
+}
