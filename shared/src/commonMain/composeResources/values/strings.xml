@@ -45,7 +45,7 @@
     <string name="result_good_job">Good Job! 👍</string>
     <string name="result_not_bad">Not Bad! 💪</string>
     <string name="result_keep_practicing">Keep Practicing! 📚</string>
-    <string name="result_pct_correct">%1$d%% Correct</string>
+    <string name="result_pct_correct">%1$d% Correct</string>
     <string name="result_category_fmt">Category: %1$s</string>
     <string name="result_difficulty_fmt">Difficulty: %1$s</string>
     <string name="result_btn_try_another">Try Another Quiz</string>

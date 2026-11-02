@@ -36,11 +36,22 @@ class QuizRepositoryImpl(
 
             val categoryId = CategoryMapper.getCategoryId(category)
             val diffString = difficulty.name.lowercase()
-            val response = openTdbApi.getQuestions(
-                amount = 50,
+            var response = openTdbApi.getQuestions(
+                amount = 15,
                 category = categoryId,
                 difficulty = diffString
             )
+
+            if (response.responseCode != 0 || response.results.size < 7) {
+                val fallbackResponse = openTdbApi.getQuestions(
+                    amount = 10,
+                    category = categoryId,
+                    difficulty = diffString
+                )
+                if (fallbackResponse.responseCode == 0 && fallbackResponse.results.isNotEmpty()) {
+                    response = fallbackResponse
+                }
+            }
 
             val questions = response.results.map { dto ->
                 dto.toDomain()

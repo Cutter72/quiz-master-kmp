@@ -7,13 +7,18 @@ import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSUserDomainMask
 
+private var iosScoresFilePath: String? = null
+
 fun getDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
     val dbFilePath = documentDirectory() + "/quizmaster.db"
+    iosScoresFilePath = documentDirectory() + "/scores.json"
     return Room.databaseBuilder(
         name = dbFilePath,
         factory = { AppDatabaseConstructor.initialize() }
     )
 }
+
+fun getIosScoresFilePath(): String? = iosScoresFilePath
 
 @OptIn(ExperimentalForeignApi::class)
 private fun documentDirectory(): String {

@@ -8,9 +8,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import java.io.File
 
 class AppDatabase_Impl : AppDatabase() {
-    private val scoreDaoImpl = RoomScoreDao()
+    private val scoreDaoImpl = RoomScoreDao(getScoresFile())
 
     override fun scoreDao(): ScoreDao = scoreDaoImpl
 
@@ -41,8 +44,39 @@ class AppDatabase_Impl : AppDatabase() {
     override fun clearAllTables() {}
 }
 
-class RoomScoreDao : ScoreDao {
+class RoomScoreDao(private val file: File?) : ScoreDao {
+    private val json = Json { ignoreUnknownKeys = true }
     private val _scores = MutableStateFlow<List<ScoreEntity>>(emptyList())
+
+    init {
+        loadScores()
+    }
+
+    private fun loadScores() {
+        val targetFile = file ?: return
+        try {
+            if (targetFile.exists()) {
+                val content = targetFile.readText()
+                if (content.isNotBlank()) {
+                    val list = json.decodeFromString<List<ScoreEntity>>(content)
+                    _scores.value = list
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun saveScores(scores: List<ScoreEntity>) {
+        val targetFile = file ?: return
+        try {
+            targetFile.parentFile?.mkdirs()
+            val content = json.encodeToString(scores)
+            targetFile.writeText(content)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 
     override fun getAllScores(): Flow<List<ScoreEntity>> {
         return _scores.asStateFlow().map { list -> list.sortedByDescending { it.date } }
@@ -51,6 +85,8 @@ class RoomScoreDao : ScoreDao {
     override suspend fun insertScore(score: ScoreEntity) {
         val nextId = (_scores.value.maxOfOrNull { it.id } ?: 0) + 1
         val newEntity = score.copy(id = nextId)
-        _scores.value = listOf(newEntity) + _scores.value
+        val updated = listOf(newEntity) + _scores.value
+        _scores.value = updated
+        saveScores(updated)
     }
 }
