@@ -5,6 +5,31 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
+
+@Immutable
+data class ExtendedColors(
+    val success: Color,
+    val onSuccess: Color
+)
+
+val LocalExtendedColors = staticCompositionLocalOf {
+    ExtendedColors(
+        success = SuccessLight,
+        onSuccess = SurfaceLight
+    )
+}
+
+object QuizTheme {
+    val extendedColors: ExtendedColors
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalExtendedColors.current
+}
 
 private val DarkColorScheme = darkColorScheme(
     primary = OrangePrimaryDark,
@@ -56,9 +81,17 @@ fun QuizTheme(
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    val extendedColors = if (darkTheme) {
+        ExtendedColors(success = SuccessDark, onSuccess = SurfaceLight)
+    } else {
+        ExtendedColors(success = SuccessLight, onSuccess = SurfaceLight)
+    }
+
+    CompositionLocalProvider(LocalExtendedColors provides extendedColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

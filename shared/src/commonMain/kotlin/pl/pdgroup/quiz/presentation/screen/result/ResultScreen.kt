@@ -63,10 +63,7 @@ import org.jetbrains.compose.resources.stringResource
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.presentation.mapper.toStringRes
-import pl.pdgroup.quiz.ui.theme.ErrorDark
-import pl.pdgroup.quiz.ui.theme.ErrorLight
-import pl.pdgroup.quiz.ui.theme.SuccessDark
-import pl.pdgroup.quiz.ui.theme.SuccessLight
+import pl.pdgroup.quiz.ui.theme.QuizTheme
 import quizmaster.shared.generated.resources.Res
 import quizmaster.shared.generated.resources.result_btn_back_to_home
 import quizmaster.shared.generated.resources.result_btn_try_another
@@ -98,13 +95,11 @@ fun ResultScreenContent(
     state: ResultContract.State,
     onIntent: (ResultContract.Intent) -> Unit
 ) {
-    val isDark = MaterialTheme.colorScheme.background.red < 0.5f
-
     val themeColor = when {
-        state.percentage >= 80 -> if (isDark) SuccessDark else SuccessLight
+        state.percentage >= 80 -> QuizTheme.extendedColors.success
         state.percentage >= 60 -> MaterialTheme.colorScheme.primary
         state.percentage >= 40 -> MaterialTheme.colorScheme.secondary
-        else -> if (isDark) ErrorDark else ErrorLight
+        else -> MaterialTheme.colorScheme.error
     }
 
     val message = when {

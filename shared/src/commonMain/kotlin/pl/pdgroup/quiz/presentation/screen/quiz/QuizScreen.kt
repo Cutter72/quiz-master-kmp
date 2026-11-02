@@ -79,10 +79,7 @@ import org.jetbrains.compose.resources.stringResource
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.presentation.mapper.toStringRes
-import pl.pdgroup.quiz.ui.theme.ErrorDark
-import pl.pdgroup.quiz.ui.theme.ErrorLight
-import pl.pdgroup.quiz.ui.theme.SuccessDark
-import pl.pdgroup.quiz.ui.theme.SuccessLight
+import pl.pdgroup.quiz.ui.theme.QuizTheme
 import quizmaster.shared.generated.resources.Res
 import quizmaster.shared.generated.resources.back
 import quizmaster.shared.generated.resources.quiz_btn_next_question
@@ -121,7 +118,6 @@ fun QuizScreenContent(
     state: QuizContract.State,
     onIntent: (QuizContract.Intent) -> Unit
 ) {
-    val isDark = MaterialTheme.colorScheme.background.red < 0.5f
     var showExitDialog by remember { mutableStateOf(false) }
 
     val navigationState = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
@@ -178,8 +174,7 @@ fun QuizScreenContent(
 
             QuizCategoryChips(
                 category = state.category,
-                difficulty = state.difficulty,
-                isDark = isDark
+                difficulty = state.difficulty
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -208,7 +203,6 @@ fun QuizScreenContent(
         ) {
             QuizResultFeedback(
                 state = state,
-                isDark = isDark,
                 onIntent = onIntent
             )
 
@@ -342,7 +336,7 @@ fun QuizHeader(
 }
 
 @Composable
-fun QuizCategoryChips(category: QuizCategory, difficulty: Difficulty, isDark: Boolean) {
+fun QuizCategoryChips(category: QuizCategory, difficulty: Difficulty) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         AssistChip(
             onClick = { },
@@ -355,7 +349,7 @@ fun QuizCategoryChips(category: QuizCategory, difficulty: Difficulty, isDark: Bo
         )
 
         val diffColor = when (difficulty) {
-            Difficulty.EASY -> if (isDark) SuccessDark else SuccessLight
+            Difficulty.EASY -> QuizTheme.extendedColors.success
             Difficulty.MEDIUM -> MaterialTheme.colorScheme.secondary
             Difficulty.HARD -> MaterialTheme.colorScheme.error
         }
@@ -449,7 +443,6 @@ fun QuizQuestionContent(state: QuizContract.State, onIntent: (QuizContract.Inten
 @Composable
 fun QuizResultFeedback(
     state: QuizContract.State,
-    isDark: Boolean,
     onIntent: (QuizContract.Intent) -> Unit
 ) {
     val retainedIsCorrect = remember { mutableStateOf(state.isCorrect) }
@@ -472,10 +465,12 @@ fun QuizResultFeedback(
         )
     ) {
         val isCorrect = retainedIsCorrect.value == true
-        val bgColor = if (isCorrect) (if (isDark) SuccessDark else SuccessLight).copy(alpha = 0.2f)
-        else (if (isDark) ErrorDark else ErrorLight).copy(alpha = 0.2f)
-        val strokeColor = if (isCorrect) (if (isDark) SuccessDark else SuccessLight)
-        else (if (isDark) ErrorDark else ErrorLight)
+        val strokeColor = if (isCorrect) {
+            QuizTheme.extendedColors.success
+        } else {
+            MaterialTheme.colorScheme.error
+        }
+        val bgColor = strokeColor.copy(alpha = 0.2f)
         val icon = if (isCorrect) Icons.Default.CheckCircle else Icons.Default.Close
 
         Card(
@@ -590,26 +585,24 @@ fun AnswerOption(
         launch { offsetXAnim.animateTo(0f, tween(300)) }
     }
 
-    val isDark = MaterialTheme.colorScheme.background.red < 0.5f
+    val successColor = QuizTheme.extendedColors.success
+    val errorColor = MaterialTheme.colorScheme.error
 
     val bgColor = when {
-        isLocked && isSelected && isCorrect -> (if (isDark) SuccessDark else SuccessLight).copy(
-            alpha = 0.2f
-        )
-
-        isLocked && isSelected && !isCorrect -> (if (isDark) ErrorDark else ErrorLight).copy(alpha = 0.2f)
+        isLocked && isSelected && isCorrect -> successColor.copy(alpha = 0.2f)
+        isLocked && isSelected && !isCorrect -> errorColor.copy(alpha = 0.2f)
         else -> MaterialTheme.colorScheme.surface
     }
 
     val borderColor = when {
-        isLocked && isSelected && isCorrect -> if (isDark) SuccessDark else SuccessLight
-        isLocked && isSelected && !isCorrect -> if (isDark) ErrorDark else ErrorLight
+        isLocked && isSelected && isCorrect -> successColor
+        isLocked && isSelected && !isCorrect -> errorColor
         else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
     }
 
     val iconBgColor = when {
-        isLocked && isSelected && isCorrect -> if (isDark) SuccessDark else SuccessLight
-        isLocked && isSelected && !isCorrect -> if (isDark) ErrorDark else ErrorLight
+        isLocked && isSelected && isCorrect -> successColor
+        isLocked && isSelected && !isCorrect -> errorColor
         isSelected && !isLocked -> MaterialTheme.colorScheme.primary
         else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
     }

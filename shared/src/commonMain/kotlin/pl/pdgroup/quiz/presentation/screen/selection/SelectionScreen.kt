@@ -59,8 +59,7 @@ import org.jetbrains.compose.resources.stringResource
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.presentation.mapper.toStringRes
-import pl.pdgroup.quiz.ui.theme.SuccessDark
-import pl.pdgroup.quiz.ui.theme.SuccessLight
+import pl.pdgroup.quiz.ui.theme.QuizTheme
 import quizmaster.shared.generated.resources.Res
 import quizmaster.shared.generated.resources.back
 import quizmaster.shared.generated.resources.home_start_quiz_title
@@ -235,9 +234,8 @@ fun DifficultySelection(
         ) {
             difficulties.forEachIndexed { index, difficulty ->
                 val isSelected = selectedDifficulty == difficulty
-                val isDark = MaterialTheme.colorScheme.background.red < 0.5f
                 val color = when (difficulty) {
-                    Difficulty.EASY -> if (isDark) SuccessDark else SuccessLight
+                    Difficulty.EASY -> QuizTheme.extendedColors.success
                     Difficulty.MEDIUM -> MaterialTheme.colorScheme.secondary
                     Difficulty.HARD -> MaterialTheme.colorScheme.error
                 }
@@ -326,13 +324,14 @@ fun StartQuizButton(
             .offset(y = startButtonOffsetY.value.dp),
         shape = RoundedCornerShape(20.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            disabledContainerColor = Color.Gray,
-            disabledContentColor = Color.DarkGray
+            containerColor = MaterialTheme.colorScheme.primary
         )
     ) {
         if (isLoading) {
-            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(24.dp)
+            )
         } else {
             Text(
                 text = stringResource(Res.string.home_start_quiz_title),

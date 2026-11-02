@@ -58,10 +58,7 @@ import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.presentation.mapper.toStringRes
 import pl.pdgroup.quiz.presentation.model.ScoreUiModel
-import pl.pdgroup.quiz.ui.theme.ErrorDark
-import pl.pdgroup.quiz.ui.theme.ErrorLight
-import pl.pdgroup.quiz.ui.theme.SuccessDark
-import pl.pdgroup.quiz.ui.theme.SuccessLight
+import pl.pdgroup.quiz.ui.theme.QuizTheme
 import quizmaster.shared.generated.resources.Res
 import quizmaster.shared.generated.resources.back
 import quizmaster.shared.generated.resources.scoreboard_empty_subtitle
@@ -89,8 +86,6 @@ fun ScoreboardScreenContent(
     state: ScoreboardContract.State,
     onIntent: (ScoreboardContract.Intent) -> Unit
 ) {
-    val isDark = MaterialTheme.colorScheme.background.red < 0.5f
-
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
         Column(
             modifier = Modifier
@@ -109,8 +104,7 @@ fun ScoreboardScreenContent(
                     ScoreboardStatsOverview(
                         totalQuizzes = state.totalQuizzes,
                         averageScore = state.averageScore,
-                        bestScore = state.bestScore,
-                        isDark = isDark
+                        bestScore = state.bestScore
                     )
                 }
 
@@ -168,8 +162,7 @@ fun ScoreboardLoadingState() {
 fun ScoreboardStatsOverview(
     totalQuizzes: Int,
     averageScore: Double,
-    bestScore: Int,
-    isDark: Boolean
+    bestScore: Int
 ) {
     val statsAlpha = remember { Animatable(0f) }
     val statsOffsetY = remember { Animatable(-20f) }
@@ -199,7 +192,7 @@ fun ScoreboardStatsOverview(
             modifier = Modifier.weight(1f),
             value = stringResource(Res.string.scoreboard_percentage_fmt, avgStr),
             label = stringResource(Res.string.scoreboard_stat_average),
-            color = if (isDark) SuccessDark else SuccessLight
+            color = QuizTheme.extendedColors.success
         )
         StatCard(
             modifier = Modifier.weight(1f),
@@ -364,18 +357,17 @@ fun ScoreCard(score: ScoreUiModel, delayMs: Long) {
         launch { offsetXAnim.animateTo(0f, tween(100)) }
     }
 
-    val isDark = MaterialTheme.colorScheme.background.red < 0.5f
     val percentage = score.percentage
 
     val scoreColor = when {
-        percentage >= 80 -> if (isDark) SuccessDark else SuccessLight
+        percentage >= 80 -> QuizTheme.extendedColors.success
         percentage >= 60 -> MaterialTheme.colorScheme.primary
         percentage >= 40 -> MaterialTheme.colorScheme.secondary
-        else -> if (isDark) ErrorDark else ErrorLight
+        else -> MaterialTheme.colorScheme.error
     }
 
     val diffColor = when (score.difficulty) {
-        Difficulty.EASY -> if (isDark) SuccessDark else SuccessLight
+        Difficulty.EASY -> QuizTheme.extendedColors.success
         Difficulty.MEDIUM -> MaterialTheme.colorScheme.secondary
         Difficulty.HARD -> MaterialTheme.colorScheme.error
     }
