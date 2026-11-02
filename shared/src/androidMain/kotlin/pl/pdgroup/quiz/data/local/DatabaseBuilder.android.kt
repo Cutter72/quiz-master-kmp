@@ -8,9 +8,8 @@ fun getDatabaseBuilder(context: Context): RoomDatabase.Builder<AppDatabase> {
     val appContext = context.applicationContext
     val dbFile = appContext.getDatabasePath("quizmaster.db")
 
-    return Room.databaseBuilder(
+    return Room.databaseBuilder<AppDatabase>(
         context = appContext,
-        name = dbFile.absolutePath,
-        factory = { AppDatabaseConstructor.initialize() }
+        name = dbFile.absolutePath
     )
 }
