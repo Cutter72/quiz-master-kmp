@@ -40,7 +40,7 @@ class ResultViewModelTest {
 
     @Test
     fun initResult_calculates_percentage_and_saves_score() = runTest {
-        viewModel.initResult("Sports", Difficulty.HARD, 8, 10)
+        viewModel.handleIntent(ResultContract.Intent.InitResult("Sports", Difficulty.HARD, 8, 10))
 
         assertEquals("Sports", viewModel.state.value.category)
         assertEquals(Difficulty.HARD, viewModel.state.value.difficulty)

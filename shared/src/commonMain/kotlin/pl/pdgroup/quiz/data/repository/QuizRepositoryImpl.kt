@@ -36,21 +36,30 @@ class QuizRepositoryImpl(
 
             val categoryId = CategoryMapper.getCategoryId(category)
             val diffString = difficulty.name.lowercase()
-            var response = openTdbApi.getQuestions(
-                amount = 15,
-                category = categoryId,
-                difficulty = diffString
-            )
 
-            if (response.responseCode != 0 || response.results.size < 7) {
-                val fallbackResponse = openTdbApi.getQuestions(
-                    amount = 10,
+            val response = try {
+                var apiResponse = openTdbApi.getQuestions(
+                    amount = 15,
                     category = categoryId,
                     difficulty = diffString
                 )
-                if (fallbackResponse.responseCode == 0 && fallbackResponse.results.isNotEmpty()) {
-                    response = fallbackResponse
+
+                if (apiResponse.responseCode != 0 || apiResponse.results.size < 7) {
+                    val fallbackResponse = openTdbApi.getQuestions(
+                        amount = 10,
+                        category = categoryId,
+                        difficulty = diffString
+                    )
+                    if (fallbackResponse.responseCode == 0 && fallbackResponse.results.isNotEmpty()) {
+                        apiResponse = fallbackResponse
+                    }
                 }
+                apiResponse
+            } catch (e: Exception) {
+                if (cachedQuestions != null && lastCategory == category && lastDifficulty == difficulty) {
+                    return@withContext cachedQuestions!!
+                }
+                throw e
             }
 
             val questions = response.results.map { dto ->

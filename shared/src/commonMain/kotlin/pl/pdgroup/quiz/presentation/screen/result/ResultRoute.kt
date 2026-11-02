@@ -21,7 +21,7 @@ fun ResultRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(category, difficulty, score, total) {
-        viewModel.initResult(category, difficulty, score, total)
+        viewModel.handleIntent(ResultContract.Intent.InitResult(category, difficulty, score, total))
     }
 
     LaunchedEffect(Unit) {
