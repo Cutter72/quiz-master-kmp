@@ -7,10 +7,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import pl.pdgroup.quiz.domain.model.Difficulty
-import pl.pdgroup.quiz.presentation.screen.home.HomeScreen
+
 import pl.pdgroup.quiz.presentation.screen.quiz.QuizRoute
 import pl.pdgroup.quiz.presentation.screen.result.ResultRoute
 import pl.pdgroup.quiz.presentation.screen.scoreboard.ScoreboardRoute
+import pl.pdgroup.quiz.presentation.screen.home.HomeRoute
 import pl.pdgroup.quiz.presentation.screen.selection.SelectionRoute
 
 @Composable
@@ -23,7 +24,7 @@ fun AppNavigation(
 ) {
     NavHost(navController = navController, startDestination = HomeRoute) {
         composable<HomeRoute> {
-            HomeScreen(
+            HomeRoute(
                 isDarkMode = isDarkMode,
                 isHighContrast = isHighContrast,
                 onToggleTheme = onToggleTheme,

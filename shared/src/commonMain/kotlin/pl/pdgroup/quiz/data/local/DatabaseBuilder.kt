@@ -2,14 +2,14 @@ package pl.pdgroup.quiz.data.local
 
 import androidx.room.RoomDatabase
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
+import pl.pdgroup.quiz.util.DispatcherProvider
 
 fun getRoomDatabase(
-    builder: RoomDatabase.Builder<AppDatabase>
+    builder: RoomDatabase.Builder<AppDatabase>,
+    dispatcherProvider: DispatcherProvider
 ): AppDatabase {
     return builder
         .setDriver(BundledSQLiteDriver())
-        .setQueryCoroutineContext(Dispatchers.IO)
+        .setQueryCoroutineContext(dispatcherProvider.io)
         .build()
 }

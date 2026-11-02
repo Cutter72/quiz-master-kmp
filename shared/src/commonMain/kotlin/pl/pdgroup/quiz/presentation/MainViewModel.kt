@@ -1,5 +1,6 @@
 package pl.pdgroup.quiz.presentation
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.SharingStarted
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import pl.pdgroup.quiz.data.local.SettingsManager
 
+@Immutable
 data class ThemeState(
     val isDarkMode: Boolean = false,
     val isHighContrast: Boolean = false

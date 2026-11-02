@@ -14,6 +14,8 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+import pl.pdgroup.quiz.util.DefaultDispatcherProvider
+
 class QuizRepositoryImplTest {
 
     private lateinit var repository: QuizRepositoryImpl
@@ -24,7 +26,7 @@ class QuizRepositoryImplTest {
     fun setUp() {
         fakeScoreDao = FakeScoreDao()
         fakeApi = FakeOpenTdbApi()
-        repository = QuizRepositoryImpl(fakeScoreDao, fakeApi)
+        repository = QuizRepositoryImpl(fakeScoreDao, fakeApi, DefaultDispatcherProvider())
     }
 
     @Test

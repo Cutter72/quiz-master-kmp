@@ -23,6 +23,7 @@ import pl.pdgroup.quiz.domain.usecase.GetScoreStatisticsUseCase
 import pl.pdgroup.quiz.domain.usecase.GetScoresUseCase
 import pl.pdgroup.quiz.domain.usecase.SaveScoreUseCase
 import pl.pdgroup.quiz.presentation.MainViewModel
+import pl.pdgroup.quiz.presentation.screen.home.HomeViewModel
 import pl.pdgroup.quiz.presentation.screen.quiz.QuizViewModel
 import pl.pdgroup.quiz.presentation.screen.result.ResultViewModel
 import pl.pdgroup.quiz.presentation.screen.scoreboard.ScoreboardViewModel
@@ -44,11 +45,11 @@ val appModule = module {
     }
 
     single<OpenTdbApi> { OpenTdbApiImpl(get()) }
-    single { pl.pdgroup.quiz.data.local.getRoomDatabase(get()) }
+    single { pl.pdgroup.quiz.data.local.getRoomDatabase(get(), get()) }
     single { get<pl.pdgroup.quiz.data.local.AppDatabase>().scoreDao() }
     singleOf(::SettingsManager)
 
-    single<QuizRepository> { QuizRepositoryImpl(get(), get()) }
+    single<QuizRepository> { QuizRepositoryImpl(get(), get(), get()) }
 
     factoryOf(::GetQuestionsUseCase)
     factoryOf(::GetScoresUseCase)
@@ -56,6 +57,7 @@ val appModule = module {
     factoryOf(::SaveScoreUseCase)
 
     viewModelOf(::MainViewModel)
+    viewModelOf(::HomeViewModel)
     viewModelOf(::SelectionViewModel)
     viewModelOf(::QuizViewModel)
     viewModelOf(::ResultViewModel)

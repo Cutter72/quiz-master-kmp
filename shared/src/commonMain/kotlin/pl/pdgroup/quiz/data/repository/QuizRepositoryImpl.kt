@@ -1,7 +1,5 @@
 package pl.pdgroup.quiz.data.repository
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -14,10 +12,12 @@ import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.Question
 import pl.pdgroup.quiz.domain.model.QuizScore
 import pl.pdgroup.quiz.domain.repository.QuizRepository
+import pl.pdgroup.quiz.util.DispatcherProvider
 
 class QuizRepositoryImpl(
     private val scoreDao: ScoreDao,
-    private val openTdbApi: OpenTdbApi
+    private val openTdbApi: OpenTdbApi,
+    private val dispatcherProvider: DispatcherProvider
 ) : QuizRepository {
 
     private var cachedQuestions: List<Question>? = null
@@ -29,7 +29,7 @@ class QuizRepositoryImpl(
         difficulty: Difficulty,
         forceRefresh: Boolean
     ): List<Question> {
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatcherProvider.io) {
             if (!forceRefresh && cachedQuestions != null && lastCategory == category && lastDifficulty == difficulty) {
                 return@withContext cachedQuestions!!
             }
@@ -89,7 +89,7 @@ class QuizRepositoryImpl(
     }
 
     override suspend fun saveScore(score: QuizScore) {
-        withContext(Dispatchers.IO) {
+        withContext(dispatcherProvider.io) {
             scoreDao.insertScore(
                 ScoreEntity(
                     category = score.category,
