@@ -37,7 +37,7 @@ class QuizContract {
     }
 
     sealed class Intent : ViewIntent {
-        data class LoadQuestions(val category: QuizCategory, val difficulty: Difficulty) : Intent()
+        data object RetryLoadQuestions : Intent()
         data class SelectAnswer(val answer: String) : Intent()
         data object ShowCorrectAnswer : Intent()
         data object NextQuestion : Intent()

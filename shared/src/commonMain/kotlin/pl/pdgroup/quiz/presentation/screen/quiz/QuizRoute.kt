@@ -10,17 +10,11 @@ import pl.pdgroup.quiz.domain.model.QuizCategory
 
 @Composable
 fun QuizRoute(
-    category: QuizCategory,
-    difficulty: Difficulty,
     onNavigateBack: () -> Unit,
     onNavigateToResults: (QuizCategory, Difficulty, Int, Int) -> Unit,
     viewModel: QuizViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-
-    LaunchedEffect(category, difficulty) {
-        viewModel.loadQuestions(category, difficulty)
-    }
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->

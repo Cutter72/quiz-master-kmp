@@ -140,7 +140,7 @@ fun QuizScreenContent(
         QuizErrorState(
             error = state.error,
             onRetry = {
-                onIntent(QuizContract.Intent.LoadQuestions(state.category, state.difficulty))
+                onIntent(QuizContract.Intent.RetryLoadQuestions)
             },
             onNavigateBack = onNavigateBack
         )

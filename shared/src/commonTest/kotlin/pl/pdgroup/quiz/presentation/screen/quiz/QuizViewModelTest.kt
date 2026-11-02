@@ -1,5 +1,6 @@
 package pl.pdgroup.quiz.presentation.screen.quiz
 
+import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -16,6 +17,8 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -24,14 +27,12 @@ class QuizViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var fakeRepository: FakeQuizRepository
     private lateinit var getQuestionsUseCase: GetQuestionsUseCase
-    private lateinit var viewModel: QuizViewModel
 
     @BeforeTest
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         fakeRepository = FakeQuizRepository()
         getQuestionsUseCase = GetQuestionsUseCase(fakeRepository)
-        viewModel = QuizViewModel(getQuestionsUseCase)
     }
 
     @AfterTest
@@ -39,27 +40,58 @@ class QuizViewModelTest {
         Dispatchers.resetMain()
     }
 
+    private fun createViewModel(
+        category: QuizCategory = QuizCategory.SPORTS,
+        difficulty: Difficulty = Difficulty.EASY
+    ): QuizViewModel {
+        val savedStateHandle = SavedStateHandle(
+            mapOf(
+                "categoryName" to category.name,
+                "difficultyName" to difficulty.name
+            )
+        )
+        return QuizViewModel(savedStateHandle, getQuestionsUseCase)
+    }
+
     @Test
-    fun loadQuestions_loads_and_sets_questions_in_state() = runTest {
-        val questions = List(10) { id ->
+    fun init_loads_and_sets_questions_in_state_from_SavedStateHandle() = runTest {
+        fakeRepository.questionsToReturn = List(10) { id ->
             Question("multiple", Difficulty.EASY, "Sports", "Question $id", "A", listOf("B", "C", "D"))
         }
-        fakeRepository.questionsToReturn = questions
 
-        viewModel.loadQuestions(QuizCategory.SPORTS, Difficulty.EASY)
+        val viewModel = createViewModel(QuizCategory.SPORTS, Difficulty.EASY)
 
+        assertEquals(QuizCategory.SPORTS, viewModel.state.value.category)
+        assertEquals(Difficulty.EASY, viewModel.state.value.difficulty)
         assertEquals(7, viewModel.state.value.questions.size)
         assertEquals(0, viewModel.state.value.currentQuestionIndex)
     }
 
     @Test
+    fun retryLoadQuestions_reloads_questions_after_error() = runTest {
+        fakeRepository.shouldThrowException = true
+
+        val viewModel = createViewModel(QuizCategory.SPORTS, Difficulty.EASY)
+        assertNotNull(viewModel.state.value.error)
+
+        fakeRepository.shouldThrowException = false
+        fakeRepository.questionsToReturn = List(10) { id ->
+            Question("multiple", Difficulty.EASY, "Sports", "Question $id", "A", listOf("B", "C", "D"))
+        }
+
+        viewModel.handleIntent(QuizContract.Intent.RetryLoadQuestions)
+
+        assertNull(viewModel.state.value.error)
+        assertEquals(7, viewModel.state.value.questions.size)
+    }
+
+    @Test
     fun selectAnswer_locks_answer_and_increments_score_when_correct() = runTest {
-        val questions = List(10) { id ->
+        fakeRepository.questionsToReturn = List(10) { id ->
             Question("multiple", Difficulty.EASY, "Sports", "Question $id", "Correct", listOf("B", "C", "D"))
         }
-        fakeRepository.questionsToReturn = questions
 
-        viewModel.loadQuestions(QuizCategory.SPORTS, Difficulty.EASY)
+        val viewModel = createViewModel()
         viewModel.handleIntent(QuizContract.Intent.SelectAnswer("Correct"))
 
         assertTrue(viewModel.state.value.isAnswerLocked)
@@ -68,12 +100,11 @@ class QuizViewModelTest {
 
     @Test
     fun nextQuestion_emits_NavigateToResults_on_last_question() = runTest {
-        val questions = List(7) { id ->
+        fakeRepository.questionsToReturn = List(7) { id ->
             Question("multiple", Difficulty.EASY, "Sports", "Question $id", "Correct", listOf("B", "C", "D"))
         }
-        fakeRepository.questionsToReturn = questions
 
-        viewModel.loadQuestions(QuizCategory.SPORTS, Difficulty.EASY)
+        val viewModel = createViewModel()
 
         for (i in 0 until 6) {
             viewModel.handleIntent(QuizContract.Intent.NextQuestion)

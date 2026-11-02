@@ -21,12 +21,6 @@ class ResultContract {
     ) : ViewState
 
     sealed class Intent : ViewIntent {
-        data class InitResult(
-            val category: QuizCategory,
-            val difficulty: Difficulty,
-            val score: Int,
-            val total: Int
-        ) : Intent()
         data object TryAnotherQuiz : Intent()
         data object ViewScoreboard : Intent()
         data object BackToHome : Intent()

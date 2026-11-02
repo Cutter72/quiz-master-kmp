@@ -5,9 +5,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
-import pl.pdgroup.quiz.domain.model.Difficulty
-import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.presentation.screen.home.HomeRoute
 import pl.pdgroup.quiz.presentation.screen.quiz.QuizRoute
 import pl.pdgroup.quiz.presentation.screen.result.ResultRoute
@@ -33,16 +30,8 @@ fun AppNavigation(
                 }
             )
         }
-        composable<QuizRoute> { backStackEntry ->
-            val route: QuizRoute = backStackEntry.toRoute()
-            val category = QuizCategory.fromKey(route.categoryName)
-            val difficulty = Difficulty.entries.find {
-                it.name.equals(route.difficultyName, ignoreCase = true)
-            } ?: Difficulty.EASY
-
+        composable<QuizRoute> {
             QuizRoute(
-                category = category,
-                difficulty = difficulty,
                 onNavigateBack = { navController.popBackStack(HomeRoute, inclusive = false) },
                 onNavigateToResults = { resCat, resDiff, score, total ->
                     navController.navigate(ResultRoute(resCat.name, resDiff.name, score, total)) {
@@ -51,18 +40,8 @@ fun AppNavigation(
                 }
             )
         }
-        composable<ResultRoute> { backStackEntry ->
-            val route: ResultRoute = backStackEntry.toRoute()
-            val category = QuizCategory.fromKey(route.categoryName)
-            val difficulty = Difficulty.entries.find {
-                it.name.equals(route.difficultyName, ignoreCase = true)
-            } ?: Difficulty.EASY
-
+        composable<ResultRoute> {
             ResultRoute(
-                category = category,
-                difficulty = difficulty,
-                score = route.score,
-                total = route.total,
                 onNavigateHome = {
                     navController.navigate(HomeRoute) {
                         popUpTo(HomeRoute) { inclusive = true }
