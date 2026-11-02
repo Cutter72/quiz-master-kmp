@@ -70,22 +70,8 @@ import kotlin.random.Random
 @Composable
 fun ResultScreen(
     state: ResultContract.State,
-    effect: kotlinx.coroutines.flow.Flow<ResultContract.Effect>,
-    onNavigateHome: () -> Unit,
-    onNavigateSelection: () -> Unit,
-    onNavigateScoreboard: () -> Unit,
     onIntent: (ResultContract.Intent) -> Unit
 ) {
-    LaunchedEffect(effect) {
-        effect.collectLatest { eff ->
-            when (eff) {
-                is ResultContract.Effect.NavigateToHome -> onNavigateHome()
-                is ResultContract.Effect.NavigateToSelection -> onNavigateSelection()
-                is ResultContract.Effect.NavigateToScoreboard -> onNavigateScoreboard()
-            }
-        }
-    }
-
     ResultScreenContent(
         state = state,
         onIntent = onIntent

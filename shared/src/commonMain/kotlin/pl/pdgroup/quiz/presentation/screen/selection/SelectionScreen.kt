@@ -63,25 +63,9 @@ import pl.pdgroup.quiz.ui.theme.SuccessLight
 @Composable
 fun SelectionScreen(
     state: SelectionContract.State,
-    effect: kotlinx.coroutines.flow.Flow<SelectionContract.Effect>,
     onNavigateBack: () -> Unit,
-    onNavigateToQuiz: (String, Difficulty) -> Unit,
     onIntent: (SelectionContract.Intent) -> Unit
 ) {
-    LaunchedEffect(effect) {
-        effect.collectLatest { eff ->
-            when (eff) {
-                is SelectionContract.Effect.NavigateToQuiz -> {
-                    onNavigateToQuiz(eff.category, eff.difficulty)
-                }
-
-                is SelectionContract.Effect.ShowError -> {
-                    // Handled by AlertDialog
-                }
-            }
-        }
-    }
-
     SelectionScreenContent(
         state = state,
         onNavigateBack = onNavigateBack,

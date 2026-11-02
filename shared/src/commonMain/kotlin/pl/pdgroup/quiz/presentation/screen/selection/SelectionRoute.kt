@@ -1,0 +1,36 @@
+package pl.pdgroup.quiz.presentation.screen.selection
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.koin.compose.viewmodel.koinViewModel
+import pl.pdgroup.quiz.domain.model.Difficulty
+
+@Composable
+fun SelectionRoute(
+    onNavigateBack: () -> Unit,
+    onNavigateToQuiz: (String, Difficulty) -> Unit,
+    viewModel: SelectionViewModel = koinViewModel()
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                is SelectionContract.Effect.NavigateToQuiz -> {
+                    onNavigateToQuiz(effect.category, effect.difficulty)
+                }
+                is SelectionContract.Effect.ShowError -> {
+                    // Handled in State Error Dialog
+                }
+            }
+        }
+    }
+
+    SelectionScreen(
+        state = state,
+        onNavigateBack = onNavigateBack,
+        onIntent = viewModel::handleIntent
+    )
+}

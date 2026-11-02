@@ -82,25 +82,9 @@ import pl.pdgroup.quiz.ui.theme.SuccessLight
 @Composable
 fun QuizScreen(
     state: QuizContract.State,
-    effect: kotlinx.coroutines.flow.Flow<QuizContract.Effect>,
     onNavigateBack: () -> Unit,
-    onNavigateToResults: (String, Difficulty, Int, Int) -> Unit,
     onIntent: (QuizContract.Intent) -> Unit
 ) {
-    LaunchedEffect(effect) {
-        effect.collectLatest { eff ->
-            when (eff) {
-                is QuizContract.Effect.NavigateToResults -> {
-                    onNavigateToResults(eff.category, eff.difficulty, eff.score, eff.total)
-                }
-
-                is QuizContract.Effect.ShowError -> {
-                    // Handled if needed
-                }
-            }
-        }
-    }
-
     QuizScreenContent(
         state = state,
         onNavigateBack = onNavigateBack,
