@@ -9,6 +9,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.Question
+import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.domain.usecase.FakeQuizRepository
 import pl.pdgroup.quiz.domain.usecase.GetQuestionsUseCase
 import kotlin.test.AfterTest
@@ -45,7 +46,7 @@ class QuizViewModelTest {
         }
         fakeRepository.questionsToReturn = questions
 
-        viewModel.loadQuestions("Sports", Difficulty.EASY)
+        viewModel.loadQuestions(QuizCategory.SPORTS, Difficulty.EASY)
 
         assertEquals(7, viewModel.state.value.questions.size)
         assertEquals(0, viewModel.state.value.currentQuestionIndex)
@@ -58,7 +59,7 @@ class QuizViewModelTest {
         }
         fakeRepository.questionsToReturn = questions
 
-        viewModel.loadQuestions("Sports", Difficulty.EASY)
+        viewModel.loadQuestions(QuizCategory.SPORTS, Difficulty.EASY)
         viewModel.handleIntent(QuizContract.Intent.SelectAnswer("Correct"))
 
         assertTrue(viewModel.state.value.isAnswerLocked)
@@ -72,7 +73,7 @@ class QuizViewModelTest {
         }
         fakeRepository.questionsToReturn = questions
 
-        viewModel.loadQuestions("Sports", Difficulty.EASY)
+        viewModel.loadQuestions(QuizCategory.SPORTS, Difficulty.EASY)
 
         for (i in 0 until 6) {
             viewModel.handleIntent(QuizContract.Intent.NextQuestion)

@@ -1,6 +1,7 @@
 package pl.pdgroup.quiz.domain.usecase
 
 import pl.pdgroup.quiz.domain.model.Difficulty
+import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.domain.model.QuizScore
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -29,9 +30,9 @@ class GetScoreStatisticsUseCaseTest {
     @Test
     fun invoke_with_valid_scores_calculates_statistics_correctly() {
         val scores = listOf(
-            QuizScore("Science", Difficulty.EASY, 5, 10, "2023-10-01T10:00:00Z"),
-            QuizScore("Math", Difficulty.MEDIUM, 8, 10, "2023-10-02T10:00:00Z"),
-            QuizScore("History", Difficulty.HARD, 9, 10, "2023-10-03T10:00:00Z")
+            QuizScore(QuizCategory.SCIENCE_AND_NATURE, Difficulty.EASY, 5, 10, "2023-10-01T10:00:00Z"),
+            QuizScore(QuizCategory.GEOGRAPHY, Difficulty.MEDIUM, 8, 10, "2023-10-02T10:00:00Z"),
+            QuizScore(QuizCategory.HISTORY, Difficulty.HARD, 9, 10, "2023-10-03T10:00:00Z")
         )
 
         val result = getScoreStatisticsUseCase(scores)
@@ -44,7 +45,7 @@ class GetScoreStatisticsUseCaseTest {
     @Test
     fun invoke_with_single_score_calculates_statistics_correctly() {
         val scores = listOf(
-            QuizScore("Science", Difficulty.EASY, 7, 10, "2023-10-01T10:00:00Z")
+            QuizScore(QuizCategory.SCIENCE_AND_NATURE, Difficulty.EASY, 7, 10, "2023-10-01T10:00:00Z")
         )
 
         val result = getScoreStatisticsUseCase(scores)

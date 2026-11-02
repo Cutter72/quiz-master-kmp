@@ -1,11 +1,12 @@
 package pl.pdgroup.quiz.presentation.screen.quiz
 
 import pl.pdgroup.quiz.domain.model.Difficulty
+import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.domain.usecase.GetQuestionsUseCase
+import pl.pdgroup.quiz.presentation.mapper.toUiText
 import pl.pdgroup.quiz.presentation.mvi.BaseViewModel
 import pl.pdgroup.quiz.util.UiText
 import quizmaster.shared.generated.resources.Res
-import quizmaster.shared.generated.resources.error_unknown
 import quizmaster.shared.generated.resources.quiz_no_questions_found
 
 class QuizViewModel(
@@ -14,7 +15,7 @@ class QuizViewModel(
 
     override fun createInitialState(): QuizContract.State = QuizContract.State()
 
-    fun loadQuestions(category: String, difficulty: Difficulty) {
+    fun loadQuestions(category: QuizCategory, difficulty: Difficulty) {
         handleIntent(QuizContract.Intent.LoadQuestions(category, difficulty))
     }
 
@@ -24,6 +25,7 @@ class QuizViewModel(
                 setState {
                     copy(
                         isLoading = true,
+                        error = null,
                         category = intent.category,
                         difficulty = intent.difficulty
                     )
@@ -51,9 +53,7 @@ class QuizViewModel(
                         }
                     }
                 }.onFailure { e ->
-                    val uiError = e.message?.let { UiText.DynamicString(it) }
-                        ?: UiText.Resource(Res.string.error_unknown)
-                    setState { copy(isLoading = false, error = uiError) }
+                    setState { copy(isLoading = false, error = e.toUiText()) }
                 }
             }
 

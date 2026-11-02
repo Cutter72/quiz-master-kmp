@@ -2,6 +2,7 @@ package pl.pdgroup.quiz.presentation.screen.result
 
 import androidx.compose.runtime.Immutable
 import pl.pdgroup.quiz.domain.model.Difficulty
+import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.presentation.mvi.ViewEffect
 import pl.pdgroup.quiz.presentation.mvi.ViewIntent
 import pl.pdgroup.quiz.presentation.mvi.ViewState
@@ -10,7 +11,7 @@ import pl.pdgroup.quiz.util.UiText
 class ResultContract {
     @Immutable
     data class State(
-        val category: String = "",
+        val category: QuizCategory = QuizCategory.GENERAL_KNOWLEDGE,
         val difficulty: Difficulty = Difficulty.EASY,
         val score: Int = 0,
         val totalQuestions: Int = 0,
@@ -21,7 +22,7 @@ class ResultContract {
 
     sealed class Intent : ViewIntent {
         data class InitResult(
-            val category: String,
+            val category: QuizCategory,
             val difficulty: Difficulty,
             val score: Int,
             val total: Int

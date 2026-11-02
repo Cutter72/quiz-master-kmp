@@ -6,6 +6,9 @@
     <string name="notice">Notice</string>
     <string name="retry">Retry</string>
     <string name="error_unknown">An unknown error occurred</string>
+    <string name="error_network">Network connection error. Please check your internet connection and try again.</string>
+    <string name="error_server">Server error (%1$d). Please try again later.</string>
+    <string name="error_database">Failed to save quiz score locally.</string>
     <string name="quiz_loading_questions">Loading questions...</string>
 
     <!-- Home Screen -->
@@ -41,6 +44,10 @@
     <string name="quiz_btn_next_question">Next Question</string>
     <string name="quiz_no_questions_found">No questions available</string>
     <string name="quiz_not_enough_questions">Not enough questions available for %1$s - %2$s. Only %3$d question(s) found. Please try another combination.</string>
+    <string name="quiz_option_a">A</string>
+    <string name="quiz_option_b">B</string>
+    <string name="quiz_option_c">C</string>
+    <string name="quiz_option_d">D</string>
 
     <!-- Result Screen -->
     <string name="result_perfect_score">Perfect Score! 🎉</string>
@@ -48,6 +55,7 @@
     <string name="result_good_job">Good Job! 👍</string>
     <string name="result_not_bad">Not Bad! 💪</string>
     <string name="result_keep_practicing">Keep Practicing! 📚</string>
+    <string name="result_score_fraction">%1$d/%2$d</string>
     <string name="result_pct_correct">%1$d% Correct</string>
     <string name="result_category_fmt">Category: %1$s</string>
     <string name="result_difficulty_fmt">Difficulty: %1$s</string>
@@ -60,6 +68,8 @@
     <string name="scoreboard_stat_quizzes">Quizzes</string>
     <string name="scoreboard_stat_average">Average</string>
     <string name="scoreboard_stat_best">Best</string>
+    <string name="scoreboard_percentage_fmt">%1$s%</string>
+    <string name="scoreboard_score_denominator">/%1$d</string>
     <string name="scoreboard_empty_title">No scores yet</string>
     <string name="scoreboard_empty_subtitle">Complete a quiz to see your scores here</string>
 

@@ -9,6 +9,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlin.time.Clock
 import pl.pdgroup.quiz.domain.model.Difficulty
+import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.domain.usecase.FakeQuizRepository
 import pl.pdgroup.quiz.domain.usecase.SaveScoreUseCase
 import kotlin.test.AfterTest
@@ -40,9 +41,9 @@ class ResultViewModelTest {
 
     @Test
     fun initResult_calculates_percentage_and_saves_score() = runTest {
-        viewModel.handleIntent(ResultContract.Intent.InitResult("Sports", Difficulty.HARD, 8, 10))
+        viewModel.handleIntent(ResultContract.Intent.InitResult(QuizCategory.SPORTS, Difficulty.HARD, 8, 10))
 
-        assertEquals("Sports", viewModel.state.value.category)
+        assertEquals(QuizCategory.SPORTS, viewModel.state.value.category)
         assertEquals(Difficulty.HARD, viewModel.state.value.difficulty)
         assertEquals(80, viewModel.state.value.percentage)
         assertEquals(1, fakeRepository.savedScores.size)

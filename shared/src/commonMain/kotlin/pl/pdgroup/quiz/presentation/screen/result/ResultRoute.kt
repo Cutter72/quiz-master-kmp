@@ -6,10 +6,11 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.viewmodel.koinViewModel
 import pl.pdgroup.quiz.domain.model.Difficulty
+import pl.pdgroup.quiz.domain.model.QuizCategory
 
 @Composable
 fun ResultRoute(
-    category: String,
+    category: QuizCategory,
     difficulty: Difficulty,
     score: Int,
     total: Int,

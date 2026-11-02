@@ -3,6 +3,7 @@ package pl.pdgroup.quiz.domain.usecase
 import kotlinx.coroutines.test.runTest
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.Question
+import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.domain.model.QuizException
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -26,19 +27,21 @@ class GetQuestionsUseCaseTest {
         val questions = List(5) { createQuestion("Q$it") }
         fakeRepository.questionsToReturn = questions
 
-        val result = getQuestionsUseCase("Any Category", Difficulty.EASY)
+        val result = getQuestionsUseCase(QuizCategory.SPORTS, Difficulty.EASY)
 
         assertTrue(result.isFailure)
-        result.onFailure { error ->
-            assertTrue(error.message!!.contains("Not enough questions available"))
-        }
+        val error = result.exceptionOrNull()
+        assertIs<QuizException.NotEnoughQuestions>(error)
+        assertEquals(QuizCategory.SPORTS, error.category)
+        assertEquals(Difficulty.EASY, error.difficulty)
+        assertEquals(5, error.foundCount)
     }
 
     @Test
     fun invoke_returns_failure_when_repository_returns_network_error() = runTest {
         fakeRepository.shouldThrowException = true
 
-        val result = getQuestionsUseCase("Any Category", Difficulty.HARD)
+        val result = getQuestionsUseCase(QuizCategory.HISTORY, Difficulty.HARD)
 
         assertTrue(result.isFailure)
         result.onFailure { error ->
@@ -51,7 +54,7 @@ class GetQuestionsUseCaseTest {
         val questions = List(7) { createQuestion("Q$it") }
         fakeRepository.questionsToReturn = questions
 
-        val result = getQuestionsUseCase("Any Category", Difficulty.MEDIUM)
+        val result = getQuestionsUseCase(QuizCategory.GEOGRAPHY, Difficulty.MEDIUM)
 
         assertTrue(result.isSuccess)
         val fetchedQuestions = result.getOrNull()
@@ -64,7 +67,7 @@ class GetQuestionsUseCaseTest {
             val questions = List(15) { createQuestion("Q$it") }
             fakeRepository.questionsToReturn = questions
 
-            val result = getQuestionsUseCase("Any Category", Difficulty.HARD)
+            val result = getQuestionsUseCase(QuizCategory.ANIMALS, Difficulty.HARD)
 
             assertTrue(result.isSuccess)
             val fetchedQuestions = result.getOrNull()

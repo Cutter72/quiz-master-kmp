@@ -7,6 +7,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import pl.pdgroup.quiz.domain.model.Difficulty
+import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.domain.model.QuizScore
 import pl.pdgroup.quiz.domain.usecase.FakeQuizRepository
 import pl.pdgroup.quiz.domain.usecase.GetScoreStatisticsUseCase
@@ -33,8 +34,8 @@ class ScoreboardViewModelTest {
         getScoreStatisticsUseCase = GetScoreStatisticsUseCase()
 
         val scores = listOf(
-            QuizScore("Sports", Difficulty.EASY, 8, 10, "2023-11-01T12:00:00Z"),
-            QuizScore("History", Difficulty.HARD, 9, 10, "2023-11-02T12:00:00Z")
+            QuizScore(QuizCategory.SPORTS, Difficulty.EASY, 8, 10, "2023-11-01T12:00:00Z"),
+            QuizScore(QuizCategory.HISTORY, Difficulty.HARD, 9, 10, "2023-11-02T12:00:00Z")
         )
         fakeRepository.savedScores.addAll(scores)
 
@@ -55,9 +56,9 @@ class ScoreboardViewModelTest {
 
     @Test
     fun selectCategory_filters_scores_by_category() = runTest {
-        viewModel.handleIntent(ScoreboardContract.Intent.SelectCategory("Sports"))
+        viewModel.handleIntent(ScoreboardContract.Intent.SelectCategory(QuizCategory.SPORTS))
 
         assertEquals(1, viewModel.state.value.filteredScores.size)
-        assertEquals("Sports", viewModel.state.value.filteredScores.first().category)
+        assertEquals(QuizCategory.SPORTS, viewModel.state.value.filteredScores.first().category)
     }
 }

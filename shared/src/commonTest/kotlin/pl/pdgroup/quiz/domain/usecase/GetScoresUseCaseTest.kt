@@ -3,6 +3,7 @@ package pl.pdgroup.quiz.domain.usecase
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import pl.pdgroup.quiz.domain.model.Difficulty
+import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.domain.model.QuizScore
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -22,8 +23,8 @@ class GetScoresUseCaseTest {
     @Test
     fun invoke_returns_flow_of_scores_from_repository() = runTest {
         val scores = listOf(
-            QuizScore("Art", Difficulty.EASY, 5, 10, "2023-11-01T12:00:00Z"),
-            QuizScore("Sports", Difficulty.HARD, 7, 10, "2023-11-02T12:00:00Z")
+            QuizScore(QuizCategory.GENERAL_KNOWLEDGE, Difficulty.EASY, 5, 10, "2023-11-01T12:00:00Z"),
+            QuizScore(QuizCategory.SPORTS, Difficulty.HARD, 7, 10, "2023-11-02T12:00:00Z")
         )
         fakeRepository.savedScores.addAll(scores)
 

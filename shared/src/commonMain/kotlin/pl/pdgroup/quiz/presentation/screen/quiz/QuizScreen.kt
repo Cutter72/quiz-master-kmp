@@ -74,6 +74,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import pl.pdgroup.quiz.domain.model.Difficulty
+import pl.pdgroup.quiz.domain.model.QuizCategory
+import pl.pdgroup.quiz.presentation.mapper.toStringRes
 import pl.pdgroup.quiz.ui.theme.ErrorDark
 import pl.pdgroup.quiz.ui.theme.ErrorLight
 import pl.pdgroup.quiz.ui.theme.SuccessDark
@@ -89,12 +91,16 @@ import quizmaster.shared.generated.resources.quiz_exit_dialog_resume
 import quizmaster.shared.generated.resources.quiz_exit_dialog_title
 import quizmaster.shared.generated.resources.quiz_feedback_correct
 import quizmaster.shared.generated.resources.quiz_feedback_incorrect
-import quizmaster.shared.generated.resources.quiz_no_questions_found
 import quizmaster.shared.generated.resources.quiz_loading_questions
-import quizmaster.shared.generated.resources.retry
+import quizmaster.shared.generated.resources.quiz_no_questions_found
+import quizmaster.shared.generated.resources.quiz_option_a
+import quizmaster.shared.generated.resources.quiz_option_b
+import quizmaster.shared.generated.resources.quiz_option_c
+import quizmaster.shared.generated.resources.quiz_option_d
 import quizmaster.shared.generated.resources.quiz_question_counter
 import quizmaster.shared.generated.resources.quiz_score_label
 import quizmaster.shared.generated.resources.quiz_show_correct_answer
+import quizmaster.shared.generated.resources.retry
 
 @Composable
 fun QuizScreen(
@@ -324,11 +330,11 @@ fun QuizHeader(
 }
 
 @Composable
-fun QuizCategoryChips(category: String, difficulty: Difficulty, isDark: Boolean) {
+fun QuizCategoryChips(category: QuizCategory, difficulty: Difficulty, isDark: Boolean) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         AssistChip(
             onClick = { },
-            label = { Text(category) },
+            label = { Text(stringResource(category.toStringRes())) },
             colors = AssistChipDefaults.assistChipColors(
                 containerColor = MaterialTheme.colorScheme.primary.copy(
                     alpha = 0.1f
@@ -344,7 +350,7 @@ fun QuizCategoryChips(category: String, difficulty: Difficulty, isDark: Boolean)
 
         AssistChip(
             onClick = { },
-            label = { Text(difficulty.name.lowercase().replaceFirstChar { it.uppercase() }) },
+            label = { Text(stringResource(difficulty.toStringRes())) },
             colors = AssistChipDefaults.assistChipColors(containerColor = diffColor.copy(alpha = 0.1f))
         )
     }
@@ -406,7 +412,12 @@ fun QuizQuestionContent(state: QuizContract.State, onIntent: (QuizContract.Inten
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            val letters = listOf("A", "B", "C", "D")
+            val letters = listOf(
+                stringResource(Res.string.quiz_option_a),
+                stringResource(Res.string.quiz_option_b),
+                stringResource(Res.string.quiz_option_c),
+                stringResource(Res.string.quiz_option_d)
+            )
             state.shuffledAnswers.forEachIndexed { ansIndex, answer ->
                 AnswerOption(
                     answer = answer,

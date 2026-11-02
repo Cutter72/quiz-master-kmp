@@ -9,6 +9,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.Question
+import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.domain.usecase.FakeQuizRepository
 import pl.pdgroup.quiz.domain.usecase.GetQuestionsUseCase
 import kotlin.test.AfterTest
@@ -40,9 +41,9 @@ class SelectionViewModelTest {
 
     @Test
     fun selectCategory_updates_state() = runTest {
-        viewModel.handleIntent(SelectionContract.Intent.SelectCategory("Sports"))
+        viewModel.handleIntent(SelectionContract.Intent.SelectCategory(QuizCategory.SPORTS))
 
-        assertEquals("Sports", viewModel.state.value.selectedCategory)
+        assertEquals(QuizCategory.SPORTS, viewModel.state.value.selectedCategory)
     }
 
     @Test
@@ -59,13 +60,13 @@ class SelectionViewModelTest {
         }
         fakeRepository.questionsToReturn = questions
 
-        viewModel.handleIntent(SelectionContract.Intent.SelectCategory("Sports"))
+        viewModel.handleIntent(SelectionContract.Intent.SelectCategory(QuizCategory.SPORTS))
         viewModel.handleIntent(SelectionContract.Intent.SelectDifficulty(Difficulty.EASY))
         viewModel.handleIntent(SelectionContract.Intent.StartQuiz)
 
         val effect = viewModel.effect.first()
         assertTrue(effect is SelectionContract.Effect.NavigateToQuiz)
-        assertEquals("Sports", effect.category)
+        assertEquals(QuizCategory.SPORTS, effect.category)
         assertEquals(Difficulty.EASY, effect.difficulty)
     }
 }

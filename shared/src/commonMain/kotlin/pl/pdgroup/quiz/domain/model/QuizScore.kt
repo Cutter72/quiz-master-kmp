@@ -1,7 +1,7 @@
 package pl.pdgroup.quiz.domain.model
 
 data class QuizScore(
-    val category: String,
+    val category: QuizCategory,
     val difficulty: Difficulty,
     val score: Int,
     val totalQuestions: Int,

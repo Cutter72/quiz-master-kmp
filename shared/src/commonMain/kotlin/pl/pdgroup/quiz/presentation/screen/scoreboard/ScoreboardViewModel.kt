@@ -4,7 +4,6 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-
 import pl.pdgroup.quiz.domain.usecase.GetScoreStatisticsUseCase
 import pl.pdgroup.quiz.domain.usecase.GetScoresUseCase
 import pl.pdgroup.quiz.presentation.mvi.BaseViewModel
@@ -32,7 +31,7 @@ class ScoreboardViewModel(
 
                         setState {
                             val category = selectedCategory
-                            val filtered = if (category == "All") {
+                            val filtered = if (category == null) {
                                 scores
                             } else {
                                 scores.filter { it.category == category }
@@ -52,7 +51,7 @@ class ScoreboardViewModel(
 
             is ScoreboardContract.Intent.SelectCategory -> {
                 setState {
-                    val filtered = if (intent.category == "All") {
+                    val filtered = if (intent.category == null) {
                         allScores
                     } else {
                         allScores.filter { it.category == intent.category }

@@ -55,7 +55,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import pl.pdgroup.quiz.domain.model.Difficulty
+import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.domain.model.QuizScore
+import pl.pdgroup.quiz.presentation.mapper.toStringRes
 import pl.pdgroup.quiz.ui.theme.ErrorDark
 import pl.pdgroup.quiz.ui.theme.ErrorLight
 import pl.pdgroup.quiz.ui.theme.SuccessDark
@@ -64,6 +66,8 @@ import quizmaster.shared.generated.resources.Res
 import quizmaster.shared.generated.resources.back
 import quizmaster.shared.generated.resources.scoreboard_empty_subtitle
 import quizmaster.shared.generated.resources.scoreboard_empty_title
+import quizmaster.shared.generated.resources.scoreboard_percentage_fmt
+import quizmaster.shared.generated.resources.scoreboard_score_denominator
 import quizmaster.shared.generated.resources.scoreboard_stat_average
 import quizmaster.shared.generated.resources.scoreboard_stat_best
 import quizmaster.shared.generated.resources.scoreboard_stat_quizzes
@@ -194,13 +198,13 @@ fun ScoreboardStatsOverview(
         )
         StatCard(
             modifier = Modifier.weight(1f),
-            value = "$avgStr%",
+            value = stringResource(Res.string.scoreboard_percentage_fmt, avgStr),
             label = stringResource(Res.string.scoreboard_stat_average),
             color = if (isDark) SuccessDark else SuccessLight
         )
         StatCard(
             modifier = Modifier.weight(1f),
-            value = "$bestScore%",
+            value = stringResource(Res.string.scoreboard_percentage_fmt, bestScore.toString()),
             label = stringResource(Res.string.scoreboard_stat_best),
             color = MaterialTheme.colorScheme.secondary
         )
@@ -239,9 +243,9 @@ fun StatCard(modifier: Modifier = Modifier, value: String, label: String, color:
 
 @Composable
 fun ScoreboardCategoryTabs(
-    categories: List<String>,
-    selectedCategory: String,
-    onCategorySelected: (String) -> Unit
+    categories: List<QuizCategory?>,
+    selectedCategory: QuizCategory?,
+    onCategorySelected: (QuizCategory?) -> Unit
 ) {
     val tabsAlpha = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
@@ -279,7 +283,7 @@ fun ScoreboardCategoryTabs(
                         )
                 ) {
                     Text(
-                        text = category,
+                        text = stringResource(category.toStringRes()),
                         modifier = Modifier.padding(horizontal = 16.dp),
                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
@@ -407,7 +411,7 @@ fun ScoreCard(score: QuizScore, delayMs: Long) {
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "/${score.totalQuestions}",
+                        text = stringResource(Res.string.scoreboard_score_denominator, score.totalQuestions),
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.White.copy(alpha = 0.8f)
                     )
@@ -418,7 +422,7 @@ fun ScoreCard(score: QuizScore, delayMs: Long) {
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = score.category,
+                    text = stringResource(score.category.toStringRes()),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -446,8 +450,7 @@ fun ScoreCard(score: QuizScore, delayMs: Long) {
                 AssistChip(
                     onClick = { },
                     label = {
-                        Text(
-                            score.difficulty.name.lowercase().replaceFirstChar { it.uppercase() })
+                        Text(stringResource(score.difficulty.toStringRes()))
                     },
                     colors = AssistChipDefaults.assistChipColors(
                         containerColor = diffColor.copy(
@@ -461,7 +464,7 @@ fun ScoreCard(score: QuizScore, delayMs: Long) {
             Spacer(modifier = Modifier.width(16.dp))
 
             Text(
-                text = "$percentage%",
+                text = stringResource(Res.string.scoreboard_percentage_fmt, percentage.toString()),
                 style = MaterialTheme.typography.headlineLarge,
                 color = scoreColor,
                 fontWeight = FontWeight.Medium

@@ -15,6 +15,7 @@ import pl.pdgroup.quiz.data.mapper.toDomain
 import pl.pdgroup.quiz.data.remote.api.OpenTdbApi
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.Question
+import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.domain.model.QuizException
 import pl.pdgroup.quiz.domain.model.QuizScore
 import pl.pdgroup.quiz.domain.repository.QuizRepository
@@ -27,7 +28,7 @@ class QuizRepositoryImpl(
 ) : QuizRepository {
 
     private data class QuestionCacheEntry(
-        val category: String,
+        val category: QuizCategory,
         val difficulty: Difficulty,
         val questions: List<Question>
     )
@@ -36,7 +37,7 @@ class QuizRepositoryImpl(
     private var cacheEntry: QuestionCacheEntry? = null
 
     override suspend fun getQuestions(
-        category: String,
+        category: QuizCategory,
         difficulty: Difficulty,
         forceRefresh: Boolean
     ): Result<List<Question>> {
@@ -102,7 +103,7 @@ class QuizRepositoryImpl(
 
     private inline fun fallbackCachedOrFailure(
         existing: QuestionCacheEntry?,
-        category: String,
+        category: QuizCategory,
         difficulty: Difficulty,
         errorProvider: () -> QuizException
     ): Result<List<Question>> {
@@ -117,7 +118,7 @@ class QuizRepositoryImpl(
         return scoreDao.getAllScores().map { entities ->
             entities.map { entity ->
                 QuizScore(
-                    category = entity.category,
+                    category = QuizCategory.fromKey(entity.category),
                     difficulty = entity.difficulty,
                     score = entity.score,
                     totalQuestions = entity.totalQuestions,
@@ -132,7 +133,7 @@ class QuizRepositoryImpl(
             try {
                 scoreDao.insertScore(
                     ScoreEntity(
-                        category = score.category,
+                        category = score.category.name,
                         difficulty = score.difficulty,
                         score = score.score,
                         totalQuestions = score.totalQuestions,

@@ -3,11 +3,12 @@ package pl.pdgroup.quiz.domain.repository
 import kotlinx.coroutines.flow.Flow
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.Question
+import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.domain.model.QuizScore
 
 interface QuizRepository {
     suspend fun getQuestions(
-        category: String,
+        category: QuizCategory,
         difficulty: Difficulty,
         forceRefresh: Boolean = false
     ): Result<List<Question>>

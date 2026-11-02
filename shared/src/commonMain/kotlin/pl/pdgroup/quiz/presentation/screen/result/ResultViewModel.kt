@@ -1,10 +1,8 @@
 package pl.pdgroup.quiz.presentation.screen.result
 
 import pl.pdgroup.quiz.domain.usecase.SaveScoreUseCase
+import pl.pdgroup.quiz.presentation.mapper.toUiText
 import pl.pdgroup.quiz.presentation.mvi.BaseViewModel
-import pl.pdgroup.quiz.util.UiText
-import quizmaster.shared.generated.resources.Res
-import quizmaster.shared.generated.resources.error_unknown
 
 class ResultViewModel(
     private val saveScoreUseCase: SaveScoreUseCase
@@ -35,9 +33,7 @@ class ResultViewModel(
                             setState { copy(isSaved = true, saveError = null) }
                         }
                         .onFailure { e ->
-                            val uiError = e.message?.let { UiText.DynamicString(it) }
-                                ?: UiText.Resource(Res.string.error_unknown)
-                            setState { copy(saveError = uiError) }
+                            setState { copy(saveError = e.toUiText()) }
                         }
                 }
             }

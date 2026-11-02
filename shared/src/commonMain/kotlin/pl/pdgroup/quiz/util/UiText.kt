@@ -16,14 +16,32 @@ sealed interface UiText {
     fun asString(): String {
         return when (this) {
             is DynamicString -> value
-            is Resource -> stringResource(res, *args.toTypedArray())
+            is Resource -> {
+                val resolvedArgs = args.map { arg ->
+                    when (arg) {
+                        is UiText -> arg.asString()
+                        is StringResource -> stringResource(arg)
+                        else -> arg
+                    }
+                }.toTypedArray()
+                stringResource(res, *resolvedArgs)
+            }
         }
     }
 
     suspend fun asStringSuspend(): String {
         return when (this) {
             is DynamicString -> value
-            is Resource -> getString(res, *args.toTypedArray())
+            is Resource -> {
+                val resolvedArgs = args.map { arg ->
+                    when (arg) {
+                        is UiText -> arg.asStringSuspend()
+                        is StringResource -> getString(arg)
+                        else -> arg
+                    }
+                }.toTypedArray()
+                getString(res, *resolvedArgs)
+            }
         }
     }
 }

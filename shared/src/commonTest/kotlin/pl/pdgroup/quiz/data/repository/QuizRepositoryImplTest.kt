@@ -11,6 +11,7 @@ import pl.pdgroup.quiz.data.remote.api.OpenTdbApi
 import pl.pdgroup.quiz.data.remote.model.OpenTdbResponse
 import pl.pdgroup.quiz.data.remote.model.QuestionDto
 import pl.pdgroup.quiz.domain.model.Difficulty
+import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.domain.model.QuizException
 import pl.pdgroup.quiz.domain.model.QuizScore
 import pl.pdgroup.quiz.util.DefaultDispatcherProvider
@@ -36,7 +37,7 @@ class QuizRepositoryImplTest {
     @Test
     fun saveScore_inserts_correct_entity_to_DAO() = runTest {
         val score = QuizScore(
-            category = "History",
+            category = QuizCategory.HISTORY,
             difficulty = Difficulty.HARD,
             score = 9,
             totalQuestions = 10,
@@ -48,7 +49,7 @@ class QuizRepositoryImplTest {
         assertTrue(result.isSuccess)
         assertEquals(1, fakeScoreDao.insertedScores.size)
         val entity = fakeScoreDao.insertedScores.first()
-        assertEquals("History", entity.category)
+        assertEquals(QuizCategory.HISTORY.name, entity.category)
         assertEquals(Difficulty.HARD, entity.difficulty)
         assertEquals(9, entity.score)
         assertEquals(10, entity.totalQuestions)
@@ -59,7 +60,7 @@ class QuizRepositoryImplTest {
     fun getScores_maps_entities_to_domain_models_correctly() = runTest {
         val entities = listOf(
             ScoreEntity(1, "Sports", Difficulty.EASY, 5, 10, "2023-10-01T10:00:00Z"),
-            ScoreEntity(2, "Math", Difficulty.MEDIUM, 8, 10, "2023-10-02T10:00:00Z")
+            ScoreEntity(2, "SCIENCE_AND_NATURE", Difficulty.MEDIUM, 8, 10, "2023-10-02T10:00:00Z")
         )
         fakeScoreDao.scoresToReturn = entities
 
@@ -68,11 +69,11 @@ class QuizRepositoryImplTest {
 
         assertEquals(2, results.size)
 
-        assertEquals("Sports", results[0].category)
+        assertEquals(QuizCategory.SPORTS, results[0].category)
         assertEquals(Difficulty.EASY, results[0].difficulty)
         assertEquals(5, results[0].score)
 
-        assertEquals("Math", results[1].category)
+        assertEquals(QuizCategory.SCIENCE_AND_NATURE, results[1].category)
         assertEquals(Difficulty.MEDIUM, results[1].difficulty)
         assertEquals(8, results[1].score)
     }
@@ -81,7 +82,7 @@ class QuizRepositoryImplTest {
     fun getQuestions_maps_IOException_to_NetworkError() = runTest {
         fakeApi.exceptionToThrow = IOException("No internet")
 
-        val result = repository.getQuestions("Sports", Difficulty.EASY)
+        val result = repository.getQuestions(QuizCategory.SPORTS, Difficulty.EASY)
 
         assertTrue(result.isFailure)
         assertIs<QuizException.NetworkError>(result.exceptionOrNull())
@@ -101,16 +102,16 @@ class QuizRepositoryImplTest {
         }
         fakeApi.responseToReturn = OpenTdbResponse(responseCode = 0, results = sampleDtos)
 
-        val first = repository.getQuestions("Sports", Difficulty.EASY, forceRefresh = false)
+        val first = repository.getQuestions(QuizCategory.SPORTS, Difficulty.EASY, forceRefresh = false)
         assertTrue(first.isSuccess)
         assertEquals(1, fakeApi.callCount)
 
-        val second = repository.getQuestions("Sports", Difficulty.EASY, forceRefresh = false)
+        val second = repository.getQuestions(QuizCategory.SPORTS, Difficulty.EASY, forceRefresh = false)
         assertTrue(second.isSuccess)
         assertEquals(1, fakeApi.callCount)
 
         fakeApi.exceptionToThrow = IOException("Offline")
-        val fallback = repository.getQuestions("Sports", Difficulty.EASY, forceRefresh = true)
+        val fallback = repository.getQuestions(QuizCategory.SPORTS, Difficulty.EASY, forceRefresh = true)
         assertTrue(fallback.isSuccess)
         assertEquals(7, fallback.getOrNull()?.size)
     }

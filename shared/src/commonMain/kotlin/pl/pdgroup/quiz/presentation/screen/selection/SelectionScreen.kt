@@ -57,6 +57,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import pl.pdgroup.quiz.domain.model.Difficulty
+import pl.pdgroup.quiz.domain.model.QuizCategory
+import pl.pdgroup.quiz.presentation.mapper.toStringRes
 import pl.pdgroup.quiz.ui.theme.SuccessDark
 import pl.pdgroup.quiz.ui.theme.SuccessLight
 import quizmaster.shared.generated.resources.Res
@@ -185,9 +187,9 @@ fun SelectionHeader(onNavigateBack: () -> Unit) {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CategorySelection(
-    categories: List<String>,
-    selectedCategory: String?,
-    onCategorySelected: (String) -> Unit
+    categories: List<QuizCategory>,
+    selectedCategory: QuizCategory?,
+    onCategorySelected: (QuizCategory) -> Unit
 ) {
     SelectionCard(
         title = stringResource(Res.string.selection_category_title),
@@ -203,7 +205,7 @@ fun CategorySelection(
                 val isSelected = selectedCategory == category
                 Box(modifier = Modifier.weight(1f)) {
                     SelectableChip(
-                        text = category,
+                        text = stringResource(category.toStringRes()),
                         isSelected = isSelected,
                         selectedColor = MaterialTheme.colorScheme.primary,
                         delayMs = index * 50L,
@@ -243,7 +245,7 @@ fun DifficultySelection(
 
                 Box(modifier = Modifier.weight(1f)) {
                     SelectableChip(
-                        text = difficulty.name.lowercase().replaceFirstChar { it.uppercase() },
+                        text = stringResource(difficulty.toStringRes()),
                         isSelected = isSelected,
                         selectedColor = color,
                         delayMs = 200L + (index * 50L),
@@ -257,7 +259,7 @@ fun DifficultySelection(
 
 @Composable
 fun SelectionInfoPanel(
-    selectedCategory: String?,
+    selectedCategory: QuizCategory?,
     selectedDifficulty: Difficulty?,
     availableQuestionsCount: Int
 ) {
@@ -277,10 +279,12 @@ fun SelectionInfoPanel(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (selectedCategory != null && selectedDifficulty != null) {
-                    val diffStr =
-                        selectedDifficulty.name.lowercase().replaceFirstChar { it.uppercase() }
                     Text(
-                        text = stringResource(Res.string.selection_info_selected, selectedCategory, diffStr),
+                        text = stringResource(
+                            Res.string.selection_info_selected,
+                            stringResource(selectedCategory.toStringRes()),
+                            stringResource(selectedDifficulty.toStringRes())
+                        ),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center

@@ -10,13 +10,13 @@ data object SelectionRoute
 
 @Serializable
 data class QuizRoute(
-    val category: String,
+    val categoryName: String,
     val difficultyName: String
 )
 
 @Serializable
 data class ResultRoute(
-    val category: String,
+    val categoryName: String,
     val difficultyName: String,
     val score: Int,
     val total: Int

@@ -6,11 +6,12 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.viewmodel.koinViewModel
 import pl.pdgroup.quiz.domain.model.Difficulty
+import pl.pdgroup.quiz.domain.model.QuizCategory
 
 @Composable
 fun SelectionRoute(
     onNavigateBack: () -> Unit,
-    onNavigateToQuiz: (String, Difficulty) -> Unit,
+    onNavigateToQuiz: (QuizCategory, Difficulty) -> Unit,
     viewModel: SelectionViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()

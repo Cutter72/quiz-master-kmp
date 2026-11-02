@@ -3,13 +3,15 @@ package pl.pdgroup.quiz.domain.usecase
 import kotlin.coroutines.cancellation.CancellationException
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.Question
+import pl.pdgroup.quiz.domain.model.QuizCategory
+import pl.pdgroup.quiz.domain.model.QuizException
 import pl.pdgroup.quiz.domain.repository.QuizRepository
 
 class GetQuestionsUseCase(
     private val repository: QuizRepository
 ) {
     suspend operator fun invoke(
-        category: String,
+        category: QuizCategory,
         difficulty: Difficulty,
         forceRefresh: Boolean = false
     ): Result<List<Question>> {
@@ -17,8 +19,10 @@ class GetQuestionsUseCase(
             repository.getQuestions(category, difficulty, forceRefresh)
                 .mapCatching { questions ->
                     if (questions.size < 7) {
-                        throw Exception(
-                            "Not enough questions available for $category - ${difficulty.name}. Only ${questions.size} question(s) found. Please try another combination."
+                        throw QuizException.NotEnoughQuestions(
+                            category = category,
+                            difficulty = difficulty,
+                            foundCount = questions.size
                         )
                     }
                     questions.shuffled().take(7)

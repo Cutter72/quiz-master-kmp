@@ -1,8 +1,9 @@
 package pl.pdgroup.quiz.domain.usecase
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlin.time.Clock
 import pl.pdgroup.quiz.domain.model.Difficulty
+import pl.pdgroup.quiz.domain.model.QuizCategory
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -20,14 +21,15 @@ class SaveScoreUseCaseTest {
     }
 
     @Test
-    fun invoke_saves_correct_score_to_repository() = runBlocking {
-        val category = "Science"
+    fun invoke_saves_correct_score_to_repository() = runTest {
+        val category = QuizCategory.SCIENCE_AND_NATURE
         val difficulty = Difficulty.HARD
         val score = 8
         val totalQuestions = 10
 
-        saveScoreUseCase(category, difficulty, score, totalQuestions)
+        val result = saveScoreUseCase(category, difficulty, score, totalQuestions)
 
+        assertTrue(result.isSuccess)
         assertEquals(1, fakeRepository.savedScores.size)
         val savedScore = fakeRepository.savedScores.first()
 

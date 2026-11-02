@@ -61,6 +61,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import pl.pdgroup.quiz.domain.model.Difficulty
+import pl.pdgroup.quiz.domain.model.QuizCategory
+import pl.pdgroup.quiz.presentation.mapper.toStringRes
 import pl.pdgroup.quiz.ui.theme.ErrorDark
 import pl.pdgroup.quiz.ui.theme.ErrorLight
 import pl.pdgroup.quiz.ui.theme.SuccessDark
@@ -77,6 +79,7 @@ import quizmaster.shared.generated.resources.result_keep_practicing
 import quizmaster.shared.generated.resources.result_not_bad
 import quizmaster.shared.generated.resources.result_pct_correct
 import quizmaster.shared.generated.resources.result_perfect_score
+import quizmaster.shared.generated.resources.result_score_fraction
 import kotlin.random.Random
 
 @Composable
@@ -189,7 +192,7 @@ fun ResultDetailsCard(
     totalQuestions: Int,
     percentage: Int,
     themeColor: Color,
-    category: String,
+    category: QuizCategory,
     difficulty: Difficulty
 ) {
     val cardAlphaAnim = remember { Animatable(0f) }
@@ -224,7 +227,7 @@ fun ResultDetailsCard(
             )
 
             Text(
-                text = "$score/$totalQuestions",
+                text = stringResource(Res.string.result_score_fraction, score, totalQuestions),
                 style = MaterialTheme.typography.displayLarge,
                 color = themeColor,
                 fontWeight = FontWeight.SemiBold,
@@ -266,7 +269,7 @@ fun ResultProgressBar(percentage: Int, themeColor: Color) {
 }
 
 @Composable
-fun ResultInfoPanel(category: String, difficulty: Difficulty) {
+fun ResultInfoPanel(category: QuizCategory, difficulty: Difficulty) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -278,14 +281,19 @@ fun ResultInfoPanel(category: String, difficulty: Difficulty) {
     ) {
         Column {
             Text(
-                text = stringResource(Res.string.result_category_fmt, category),
+                text = stringResource(
+                    Res.string.result_category_fmt,
+                    stringResource(category.toStringRes())
+                ),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(4.dp))
-            val diffStr = difficulty.name.lowercase().replaceFirstChar { it.uppercase() }
             Text(
-                text = stringResource(Res.string.result_difficulty_fmt, diffStr),
+                text = stringResource(
+                    Res.string.result_difficulty_fmt,
+                    stringResource(difficulty.toStringRes())
+                ),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

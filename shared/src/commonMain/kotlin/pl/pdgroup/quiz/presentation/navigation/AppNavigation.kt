@@ -7,11 +7,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import pl.pdgroup.quiz.domain.model.Difficulty
-
+import pl.pdgroup.quiz.domain.model.QuizCategory
+import pl.pdgroup.quiz.presentation.screen.home.HomeRoute
 import pl.pdgroup.quiz.presentation.screen.quiz.QuizRoute
 import pl.pdgroup.quiz.presentation.screen.result.ResultRoute
 import pl.pdgroup.quiz.presentation.screen.scoreboard.ScoreboardRoute
-import pl.pdgroup.quiz.presentation.screen.home.HomeRoute
 import pl.pdgroup.quiz.presentation.screen.selection.SelectionRoute
 
 @Composable
@@ -37,24 +37,23 @@ fun AppNavigation(
             SelectionRoute(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToQuiz = { category, difficulty ->
-                    navController.navigate(QuizRoute(category, difficulty.name))
+                    navController.navigate(QuizRoute(category.name, difficulty.name))
                 }
             )
         }
         composable<QuizRoute> { backStackEntry ->
             val route: QuizRoute = backStackEntry.toRoute()
-            val difficulty = try {
-                Difficulty.valueOf(route.difficultyName.uppercase())
-            } catch (_: Exception) {
-                Difficulty.EASY
-            }
+            val category = QuizCategory.fromKey(route.categoryName)
+            val difficulty = Difficulty.entries.find {
+                it.name.equals(route.difficultyName, ignoreCase = true)
+            } ?: Difficulty.EASY
 
             QuizRoute(
-                category = route.category,
+                category = category,
                 difficulty = difficulty,
                 onNavigateBack = { navController.popBackStack(HomeRoute, inclusive = false) },
                 onNavigateToResults = { resCat, resDiff, score, total ->
-                    navController.navigate(ResultRoute(resCat, resDiff.name, score, total)) {
+                    navController.navigate(ResultRoute(resCat.name, resDiff.name, score, total)) {
                         popUpTo(HomeRoute) { inclusive = false }
                     }
                 }
@@ -62,14 +61,13 @@ fun AppNavigation(
         }
         composable<ResultRoute> { backStackEntry ->
             val route: ResultRoute = backStackEntry.toRoute()
-            val difficulty = try {
-                Difficulty.valueOf(route.difficultyName.uppercase())
-            } catch (_: Exception) {
-                Difficulty.EASY
-            }
+            val category = QuizCategory.fromKey(route.categoryName)
+            val difficulty = Difficulty.entries.find {
+                it.name.equals(route.difficultyName, ignoreCase = true)
+            } ?: Difficulty.EASY
 
             ResultRoute(
-                category = route.category,
+                category = category,
                 difficulty = difficulty,
                 score = route.score,
                 total = route.total,

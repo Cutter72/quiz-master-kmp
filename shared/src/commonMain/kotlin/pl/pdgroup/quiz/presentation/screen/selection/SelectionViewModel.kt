@@ -1,10 +1,8 @@
 package pl.pdgroup.quiz.presentation.screen.selection
 
 import pl.pdgroup.quiz.domain.usecase.GetQuestionsUseCase
+import pl.pdgroup.quiz.presentation.mapper.toUiText
 import pl.pdgroup.quiz.presentation.mvi.BaseViewModel
-import pl.pdgroup.quiz.util.UiText
-import quizmaster.shared.generated.resources.Res
-import quizmaster.shared.generated.resources.error_unknown
 
 class SelectionViewModel(
     private val getQuestionsUseCase: GetQuestionsUseCase
@@ -35,8 +33,7 @@ class SelectionViewModel(
                     result.onSuccess {
                         setEffect { SelectionContract.Effect.NavigateToQuiz(category, difficulty) }
                     }.onFailure { e ->
-                        val uiError = e.message?.let { UiText.DynamicString(it) }
-                            ?: UiText.Resource(Res.string.error_unknown)
+                        val uiError = e.toUiText()
                         setState { copy(error = uiError) }
                         setEffect { SelectionContract.Effect.ShowError(uiError) }
                     }

@@ -1,16 +1,14 @@
 package pl.pdgroup.quiz.data.mapper
 
-object CategoryMapper {
-    private val categoryMap = mapOf(
-        "General Knowledge" to 9,
-        "Science & Nature" to 17,
-        "Sports" to 21,
-        "Geography" to 22,
-        "History" to 23,
-        "Animals" to 27
-    )
+import pl.pdgroup.quiz.domain.model.QuizCategory
 
-    fun getCategoryId(categoryName: String): Int {
-        return categoryMap[categoryName] ?: 9 // Default to General Knowledge
+object CategoryMapper {
+    fun getCategoryId(category: QuizCategory): Int = when (category) {
+        QuizCategory.GENERAL_KNOWLEDGE -> 9
+        QuizCategory.SCIENCE_AND_NATURE -> 17
+        QuizCategory.SPORTS -> 21
+        QuizCategory.GEOGRAPHY -> 22
+        QuizCategory.HISTORY -> 23
+        QuizCategory.ANIMALS -> 27
     }
 }
