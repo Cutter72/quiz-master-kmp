@@ -9,14 +9,17 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlin.time.Clock
 import kotlinx.serialization.json.Json
 import org.koin.core.context.startKoin
+import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.module
 import org.koin.mp.KoinPlatformTools
+import pl.pdgroup.quiz.data.local.AppDatabase
 import pl.pdgroup.quiz.data.local.ScoreDao
 import pl.pdgroup.quiz.data.local.SettingsManager
+import pl.pdgroup.quiz.data.local.getRoomDatabase
 import pl.pdgroup.quiz.data.remote.api.OpenTdbApi
 import pl.pdgroup.quiz.data.remote.api.OpenTdbApiImpl
 import pl.pdgroup.quiz.data.repository.QuizRepositoryImpl
@@ -37,7 +40,7 @@ import pl.pdgroup.quiz.util.DefaultDispatcherProvider
 import pl.pdgroup.quiz.util.DispatcherProvider
 
 val appModule = module {
-    single<DispatcherProvider> { DefaultDispatcherProvider() }
+    singleOf(::DefaultDispatcherProvider) { bind<DispatcherProvider>() }
     single<Clock> { Clock.System }
     single {
         Json {
@@ -63,13 +66,12 @@ val appModule = module {
         }
     }
 
-    single<OpenTdbApi> { OpenTdbApiImpl(get()) }
-    single { pl.pdgroup.quiz.data.local.getRoomDatabase(get(), get()) }
-    single { get<pl.pdgroup.quiz.data.local.AppDatabase>().scoreDao() }
+    singleOf(::OpenTdbApiImpl) { bind<OpenTdbApi>() }
+    singleOf(::getRoomDatabase)
+    single<ScoreDao> { get<AppDatabase>().scoreDao() }
     singleOf(::SettingsManager)
-    single<SettingsRepository> { SettingsRepositoryImpl(get(), get()) }
-
-    single<QuizRepository> { QuizRepositoryImpl(get(), get(), get()) }
+    singleOf(::SettingsRepositoryImpl) { bind<SettingsRepository>() }
+    singleOf(::QuizRepositoryImpl) { bind<QuizRepository>() }
 
     factoryOf(::GetQuestionsUseCase)
     factoryOf(::GetScoresUseCase)
