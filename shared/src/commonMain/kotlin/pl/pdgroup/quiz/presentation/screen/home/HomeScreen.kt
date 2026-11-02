@@ -49,6 +49,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
+import quizmaster.shared.generated.resources.Res
+import quizmaster.shared.generated.resources.home_footer_info
+import quizmaster.shared.generated.resources.home_hero_subtitle
+import quizmaster.shared.generated.resources.home_hero_title
+import quizmaster.shared.generated.resources.home_scoreboard_desc
+import quizmaster.shared.generated.resources.home_scoreboard_title
+import quizmaster.shared.generated.resources.home_start_quiz_desc
+import quizmaster.shared.generated.resources.home_start_quiz_title
+import quizmaster.shared.generated.resources.toggle_contrast
+import quizmaster.shared.generated.resources.toggle_theme
 
 @Composable
 fun HomeScreen(
@@ -106,7 +117,7 @@ fun HomeHeaderControls(
         IconButton(onClick = onToggleTheme) {
             Icon(
                 imageVector = if (isDarkMode) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
-                contentDescription = "Toggle Theme",
+                contentDescription = stringResource(Res.string.toggle_theme),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(32.dp)
             )
@@ -115,7 +126,7 @@ fun HomeHeaderControls(
         IconButton(onClick = onToggleContrast) {
             Icon(
                 imageVector = Icons.Outlined.Contrast,
-                contentDescription = "Toggle Contrast",
+                contentDescription = stringResource(Res.string.toggle_contrast),
                 tint = if (isHighContrast) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(32.dp)
             )
@@ -138,7 +149,7 @@ fun HomeHeroSection() {
 
     Icon(
         imageVector = Icons.AutoMirrored.Filled.List,
-        contentDescription = "Quiz Logo",
+        contentDescription = stringResource(Res.string.home_hero_title),
         tint = MaterialTheme.colorScheme.primary,
         modifier = Modifier
             .size(120.dp)
@@ -148,7 +159,7 @@ fun HomeHeroSection() {
     Spacer(modifier = Modifier.height(16.dp))
 
     Text(
-        text = "Quiz Master",
+        text = stringResource(Res.string.home_hero_title),
         style = MaterialTheme.typography.displayMedium,
         textAlign = TextAlign.Center
     )
@@ -156,7 +167,7 @@ fun HomeHeroSection() {
     Spacer(modifier = Modifier.height(8.dp))
 
     Text(
-        text = "Test your knowledge across multiple categories",
+        text = stringResource(Res.string.home_hero_subtitle),
         style = MaterialTheme.typography.headlineSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center
@@ -169,8 +180,8 @@ fun HomeActionCards(
     onNavigateToScoreboard: () -> Unit
 ) {
     ActionCard(
-        title = "Start Quiz",
-        description = "Choose a category and difficulty level",
+        title = stringResource(Res.string.home_start_quiz_title),
+        description = stringResource(Res.string.home_start_quiz_desc),
         icon = Icons.AutoMirrored.Filled.List,
         iconBgColor = MaterialTheme.colorScheme.primary,
         delayMs = 150,
@@ -180,8 +191,8 @@ fun HomeActionCards(
     Spacer(modifier = Modifier.height(24.dp))
 
     ActionCard(
-        title = "Scoreboard",
-        description = "View your quiz history and scores",
+        title = stringResource(Res.string.home_scoreboard_title),
+        description = stringResource(Res.string.home_scoreboard_desc),
         icon = Icons.Default.Leaderboard,
         iconBgColor = MaterialTheme.colorScheme.secondary,
         delayMs = 300,
@@ -198,7 +209,7 @@ fun HomeFooterInfo() {
     }
 
     Text(
-        text = "Answer all questions to save your score",
+        text = stringResource(Res.string.home_footer_info),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,

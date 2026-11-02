@@ -53,12 +53,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.QuizScore
 import pl.pdgroup.quiz.ui.theme.ErrorDark
 import pl.pdgroup.quiz.ui.theme.ErrorLight
 import pl.pdgroup.quiz.ui.theme.SuccessDark
 import pl.pdgroup.quiz.ui.theme.SuccessLight
+import quizmaster.shared.generated.resources.Res
+import quizmaster.shared.generated.resources.back
+import quizmaster.shared.generated.resources.scoreboard_empty_subtitle
+import quizmaster.shared.generated.resources.scoreboard_empty_title
+import quizmaster.shared.generated.resources.scoreboard_stat_average
+import quizmaster.shared.generated.resources.scoreboard_stat_best
+import quizmaster.shared.generated.resources.scoreboard_stat_quizzes
+import quizmaster.shared.generated.resources.scoreboard_title
 
 @Composable
 fun ScoreboardScreen(
@@ -125,7 +134,7 @@ fun ScoreboardHeader(onNavigateBack: () -> Unit) {
         IconButton(onClick = onNavigateBack) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = stringResource(Res.string.back),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(32.dp)
             )
@@ -139,7 +148,7 @@ fun ScoreboardHeader(onNavigateBack: () -> Unit) {
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = "Scoreboard",
+            text = stringResource(Res.string.scoreboard_title),
             style = MaterialTheme.typography.headlineMedium
         )
     }
@@ -180,19 +189,19 @@ fun ScoreboardStatsOverview(
         StatCard(
             modifier = Modifier.weight(1f),
             value = "$totalQuizzes",
-            label = "Quizzes",
+            label = stringResource(Res.string.scoreboard_stat_quizzes),
             color = MaterialTheme.colorScheme.primary
         )
         StatCard(
             modifier = Modifier.weight(1f),
             value = "$avgStr%",
-            label = "Average",
+            label = stringResource(Res.string.scoreboard_stat_average),
             color = if (isDark) SuccessDark else SuccessLight
         )
         StatCard(
             modifier = Modifier.weight(1f),
             value = "$bestScore%",
-            label = "Best",
+            label = stringResource(Res.string.scoreboard_stat_best),
             color = MaterialTheme.colorScheme.secondary
         )
     }
@@ -325,13 +334,13 @@ fun EmptyState() {
                     .padding(bottom = 16.dp)
             )
             Text(
-                text = "No scores yet",
+                text = stringResource(Res.string.scoreboard_empty_title),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium
             )
             Text(
-                text = "Complete a quiz to see your scores here",
+                text = stringResource(Res.string.scoreboard_empty_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp),

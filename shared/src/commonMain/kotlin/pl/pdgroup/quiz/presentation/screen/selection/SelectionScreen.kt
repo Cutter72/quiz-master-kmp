@@ -54,11 +54,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.ui.theme.SuccessDark
 import pl.pdgroup.quiz.ui.theme.SuccessLight
+import quizmaster.shared.generated.resources.Res
+import quizmaster.shared.generated.resources.back
+import quizmaster.shared.generated.resources.home_start_quiz_title
+import quizmaster.shared.generated.resources.notice
+import quizmaster.shared.generated.resources.ok
+import quizmaster.shared.generated.resources.selection_category_title
+import quizmaster.shared.generated.resources.selection_difficulty_title
+import quizmaster.shared.generated.resources.selection_header_title
+import quizmaster.shared.generated.resources.selection_info_questions_available
+import quizmaster.shared.generated.resources.selection_info_selected
 
 @Composable
 fun SelectionScreen(
@@ -140,11 +150,11 @@ fun SelectionErrorDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Notice") },
+        title = { Text(stringResource(Res.string.notice)) },
         text = { Text(error ?: "") },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("OK")
+                Text(stringResource(Res.string.ok))
             }
         }
     )
@@ -159,14 +169,14 @@ fun SelectionHeader(onNavigateBack: () -> Unit) {
         IconButton(onClick = onNavigateBack) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = stringResource(Res.string.back),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(32.dp)
             )
         }
         Spacer(modifier = Modifier.width(16.dp))
         Text(
-            text = "Select Quiz Options",
+            text = stringResource(Res.string.selection_header_title),
             style = MaterialTheme.typography.headlineLarge
         )
     }
@@ -180,7 +190,7 @@ fun CategorySelection(
     onCategorySelected: (String) -> Unit
 ) {
     SelectionCard(
-        title = "Choose a Category",
+        title = stringResource(Res.string.selection_category_title),
         delayMs = 0
     ) {
         FlowRow(
@@ -213,7 +223,7 @@ fun DifficultySelection(
     onDifficultySelected: (Difficulty) -> Unit
 ) {
     SelectionCard(
-        title = "Choose Difficulty",
+        title = stringResource(Res.string.selection_difficulty_title),
         delayMs = 200
     ) {
         FlowRow(
@@ -270,7 +280,7 @@ fun SelectionInfoPanel(
                     val diffStr =
                         selectedDifficulty.name.lowercase().replaceFirstChar { it.uppercase() }
                     Text(
-                        text = "You selected $selectedCategory with $diffStr difficulty",
+                        text = stringResource(Res.string.selection_info_selected, selectedCategory, diffStr),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
@@ -278,7 +288,7 @@ fun SelectionInfoPanel(
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "$availableQuestionsCount question(s) available • Complete all to save your score",
+                    text = stringResource(Res.string.selection_info_questions_available, availableQuestionsCount),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
@@ -322,7 +332,7 @@ fun StartQuizButton(
             CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
         } else {
             Text(
-                text = "Start Quiz",
+                text = stringResource(Res.string.home_start_quiz_title),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium
             )

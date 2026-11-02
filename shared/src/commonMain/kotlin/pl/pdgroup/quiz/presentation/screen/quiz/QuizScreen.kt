@@ -71,13 +71,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.ui.theme.ErrorDark
 import pl.pdgroup.quiz.ui.theme.ErrorLight
 import pl.pdgroup.quiz.ui.theme.SuccessDark
 import pl.pdgroup.quiz.ui.theme.SuccessLight
+import quizmaster.shared.generated.resources.Res
+import quizmaster.shared.generated.resources.back
+import quizmaster.shared.generated.resources.quiz_btn_next_question
+import quizmaster.shared.generated.resources.quiz_btn_view_results
+import quizmaster.shared.generated.resources.quiz_correct_answer_prefix
+import quizmaster.shared.generated.resources.quiz_exit_dialog_exit
+import quizmaster.shared.generated.resources.quiz_exit_dialog_message
+import quizmaster.shared.generated.resources.quiz_exit_dialog_resume
+import quizmaster.shared.generated.resources.quiz_exit_dialog_title
+import quizmaster.shared.generated.resources.quiz_feedback_correct
+import quizmaster.shared.generated.resources.quiz_feedback_incorrect
+import quizmaster.shared.generated.resources.quiz_no_questions_found
+import quizmaster.shared.generated.resources.quiz_question_counter
+import quizmaster.shared.generated.resources.quiz_score_label
+import quizmaster.shared.generated.resources.quiz_show_correct_answer
 
 @Composable
 fun QuizScreen(
@@ -183,19 +198,19 @@ fun QuizScreenContent(
 fun ExitQuizDialog(onDismiss: () -> Unit, onExit: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Exit quiz?") },
-        text = { Text("Your progress won't be saved.") },
+        title = { Text(stringResource(Res.string.quiz_exit_dialog_title)) },
+        text = { Text(stringResource(Res.string.quiz_exit_dialog_message)) },
         confirmButton = {
             TextButton(onClick = {
                 onDismiss()
                 onExit()
             }) {
-                Text("Exit", color = MaterialTheme.colorScheme.error)
+                Text(stringResource(Res.string.quiz_exit_dialog_exit), color = MaterialTheme.colorScheme.error)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Resume")
+                Text(stringResource(Res.string.quiz_exit_dialog_resume))
             }
         }
     )
@@ -211,7 +226,7 @@ fun QuizLoadingState() {
 @Composable
 fun QuizErrorState(error: String?) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(error ?: "No questions available")
+        Text(error ?: stringResource(Res.string.quiz_no_questions_found))
     }
 }
 
@@ -229,14 +244,14 @@ fun QuizHeader(
         IconButton(onClick = onExitClick) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = stringResource(Res.string.back),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(32.dp)
             )
         }
         Spacer(modifier = Modifier.width(16.dp))
         Text(
-            text = "Question ${currentQuestionIndex + 1} of $totalQuestions",
+            text = stringResource(Res.string.quiz_question_counter, currentQuestionIndex + 1, totalQuestions),
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.weight(1f)
         )
@@ -248,7 +263,7 @@ fun QuizHeader(
                 color = MaterialTheme.colorScheme.primary
             )
             Text(
-                text = "Score",
+                text = stringResource(Res.string.quiz_score_label),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -412,7 +427,7 @@ fun QuizResultFeedback(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = if (isCorrect) "Correct! +1 Point" else "Incorrect!",
+                            text = if (isCorrect) stringResource(Res.string.quiz_feedback_correct) else stringResource(Res.string.quiz_feedback_incorrect),
                             style = MaterialTheme.typography.titleMedium,
                             color = strokeColor,
                             fontWeight = FontWeight.SemiBold
@@ -426,11 +441,11 @@ fun QuizResultFeedback(
                                 onClick = { onIntent(QuizContract.Intent.ShowCorrectAnswer) },
                                 colors = ButtonDefaults.outlinedButtonColors(contentColor = strokeColor)
                             ) {
-                                Text("Show Correct Answer")
+                                Text(stringResource(Res.string.quiz_show_correct_answer))
                             }
                         } else {
                             Text(
-                                text = "Correct answer: ${retainedCorrectAnswer.value ?: ""}",
+                                text = stringResource(Res.string.quiz_correct_answer_prefix, retainedCorrectAnswer.value ?: ""),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -473,7 +488,7 @@ fun QuizActionButtons(state: QuizContract.State, onIntent: (QuizContract.Intent)
             elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
         ) {
             Text(
-                text = if (retainedIsLastQuestion.value) "View Results" else "Next Question",
+                text = if (retainedIsLastQuestion.value) stringResource(Res.string.quiz_btn_view_results) else stringResource(Res.string.quiz_btn_next_question),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium
             )

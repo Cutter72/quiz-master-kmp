@@ -58,13 +58,25 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.ui.theme.ErrorDark
 import pl.pdgroup.quiz.ui.theme.ErrorLight
 import pl.pdgroup.quiz.ui.theme.SuccessDark
 import pl.pdgroup.quiz.ui.theme.SuccessLight
+import quizmaster.shared.generated.resources.Res
+import quizmaster.shared.generated.resources.result_btn_back_to_home
+import quizmaster.shared.generated.resources.result_btn_try_another
+import quizmaster.shared.generated.resources.result_btn_view_scoreboard
+import quizmaster.shared.generated.resources.result_category_fmt
+import quizmaster.shared.generated.resources.result_difficulty_fmt
+import quizmaster.shared.generated.resources.result_excellent
+import quizmaster.shared.generated.resources.result_good_job
+import quizmaster.shared.generated.resources.result_keep_practicing
+import quizmaster.shared.generated.resources.result_not_bad
+import quizmaster.shared.generated.resources.result_pct_correct
+import quizmaster.shared.generated.resources.result_perfect_score
 import kotlin.random.Random
 
 @Composable
@@ -93,11 +105,11 @@ fun ResultScreenContent(
     }
 
     val message = when {
-        state.percentage == 100 -> "Perfect Score! 🎉"
-        state.percentage >= 80 -> "Excellent! 🌟"
-        state.percentage >= 60 -> "Good Job! 👍"
-        state.percentage >= 40 -> "Not Bad! 💪"
-        else -> "Keep Practicing! 📚"
+        state.percentage == 100 -> stringResource(Res.string.result_perfect_score)
+        state.percentage >= 80 -> stringResource(Res.string.result_excellent)
+        state.percentage >= 60 -> stringResource(Res.string.result_good_job)
+        state.percentage >= 40 -> stringResource(Res.string.result_not_bad)
+        else -> stringResource(Res.string.result_keep_practicing)
     }
 
     if (state.percentage == 100) {
@@ -160,7 +172,7 @@ fun ResultTrophy(themeColor: Color) {
 
     Icon(
         imageVector = Icons.Default.EmojiEvents,
-        contentDescription = "Trophy",
+        contentDescription = null,
         tint = themeColor,
         modifier = Modifier
             .size(120.dp)
@@ -220,7 +232,7 @@ fun ResultDetailsCard(
             )
 
             Text(
-                text = "$percentage% Correct",
+                text = stringResource(Res.string.result_pct_correct, percentage),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 32.dp)
@@ -266,14 +278,14 @@ fun ResultInfoPanel(category: String, difficulty: Difficulty) {
     ) {
         Column {
             Text(
-                text = "Category: $category",
+                text = stringResource(Res.string.result_category_fmt, category),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(4.dp))
             val diffStr = difficulty.name.lowercase().replaceFirstChar { it.uppercase() }
             Text(
-                text = "Difficulty: $diffStr",
+                text = stringResource(Res.string.result_difficulty_fmt, diffStr),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -288,7 +300,7 @@ fun ResultActionButtons(
     onBackToHome: () -> Unit
 ) {
     AnimatedButton(
-        text = "Try Another Quiz",
+        text = stringResource(Res.string.result_btn_try_another),
         icon = Icons.Default.Refresh,
         delayMs = 400,
         isOutlined = false,
@@ -299,7 +311,7 @@ fun ResultActionButtons(
     Spacer(modifier = Modifier.height(16.dp))
 
     AnimatedButton(
-        text = "View Scoreboard",
+        text = stringResource(Res.string.result_btn_view_scoreboard),
         icon = Icons.Default.Leaderboard,
         delayMs = 500,
         isOutlined = true,
@@ -310,7 +322,7 @@ fun ResultActionButtons(
     Spacer(modifier = Modifier.height(16.dp))
 
     AnimatedButton(
-        text = "Back to Home",
+        text = stringResource(Res.string.result_btn_back_to_home),
         icon = Icons.Default.Home,
         delayMs = 600,
         isOutlined = false,
