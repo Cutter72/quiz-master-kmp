@@ -12,6 +12,7 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.module
+import org.koin.mp.KoinPlatformTools
 import pl.pdgroup.quiz.data.local.ScoreDao
 import pl.pdgroup.quiz.data.local.SettingsManager
 import pl.pdgroup.quiz.data.remote.api.OpenTdbApi
@@ -64,8 +65,10 @@ val appModule = module {
     viewModelOf(::ScoreboardViewModel)
 }
 
-fun initKoin(appDeclaration: KoinAppDeclaration = {}) =
+fun initKoin(appDeclaration: KoinAppDeclaration = {}) {
+    if (KoinPlatformTools.defaultContext().getOrNull() != null) return
     startKoin {
         appDeclaration()
         modules(appModule, platformModule)
     }
+}
