@@ -3,6 +3,10 @@ package pl.pdgroup.quiz.presentation.screen.quiz
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.usecase.GetQuestionsUseCase
 import pl.pdgroup.quiz.presentation.mvi.BaseViewModel
+import pl.pdgroup.quiz.util.UiText
+import quizmaster.shared.generated.resources.Res
+import quizmaster.shared.generated.resources.error_unknown
+import quizmaster.shared.generated.resources.quiz_no_questions_found
 
 class QuizViewModel(
     private val getQuestionsUseCase: GetQuestionsUseCase
@@ -39,10 +43,17 @@ class QuizViewModel(
                             )
                         }
                     } else {
-                        setState { copy(isLoading = false, error = "No questions found") }
+                        setState {
+                            copy(
+                                isLoading = false,
+                                error = UiText.Resource(Res.string.quiz_no_questions_found)
+                            )
+                        }
                     }
                 }.onFailure { e ->
-                    setState { copy(isLoading = false, error = e.message) }
+                    val uiError = e.message?.let { UiText.DynamicString(it) }
+                        ?: UiText.Resource(Res.string.error_unknown)
+                    setState { copy(isLoading = false, error = uiError) }
                 }
             }
 

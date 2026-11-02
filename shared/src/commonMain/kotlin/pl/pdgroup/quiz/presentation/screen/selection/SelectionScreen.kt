@@ -145,13 +145,13 @@ fun SelectionScreenContent(
 
 @Composable
 fun SelectionErrorDialog(
-    error: String?,
+    error: pl.pdgroup.quiz.util.UiText?,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(Res.string.notice)) },
-        text = { Text(error ?: "") },
+        text = { Text(error?.asString() ?: "") },
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text(stringResource(Res.string.ok))

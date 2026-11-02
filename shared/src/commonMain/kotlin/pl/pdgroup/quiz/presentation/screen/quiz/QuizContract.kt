@@ -6,6 +6,7 @@ import pl.pdgroup.quiz.domain.model.Question
 import pl.pdgroup.quiz.presentation.mvi.ViewEffect
 import pl.pdgroup.quiz.presentation.mvi.ViewIntent
 import pl.pdgroup.quiz.presentation.mvi.ViewState
+import pl.pdgroup.quiz.util.UiText
 
 class QuizContract {
     @Immutable
@@ -19,7 +20,7 @@ class QuizContract {
         val isAnswerLocked: Boolean = false,
         val showCorrectAnswer: Boolean = false,
         val isLoading: Boolean = true,
-        val error: String? = null,
+        val error: UiText? = null,
         val shuffledAnswers: List<String> = emptyList()
     ) : ViewState {
         val currentQuestion: Question?
@@ -50,6 +51,6 @@ class QuizContract {
             val total: Int
         ) : Effect()
 
-        data class ShowError(val message: String) : Effect()
+        data class ShowError(val error: UiText) : Effect()
     }
 }

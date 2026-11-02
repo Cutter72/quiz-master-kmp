@@ -4,6 +4,9 @@
     <string name="back">Back</string>
     <string name="ok">OK</string>
     <string name="notice">Notice</string>
+    <string name="retry">Retry</string>
+    <string name="error_unknown">An unknown error occurred</string>
+    <string name="quiz_loading_questions">Loading questions...</string>
 
     <!-- Home Screen -->
     <string name="home_hero_title">Quiz Master</string>

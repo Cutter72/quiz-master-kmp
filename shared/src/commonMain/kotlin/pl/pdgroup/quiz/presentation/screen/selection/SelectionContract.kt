@@ -5,6 +5,7 @@ import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.presentation.mvi.ViewEffect
 import pl.pdgroup.quiz.presentation.mvi.ViewIntent
 import pl.pdgroup.quiz.presentation.mvi.ViewState
+import pl.pdgroup.quiz.util.UiText
 
 class SelectionContract {
     @Immutable
@@ -26,7 +27,7 @@ class SelectionContract {
         val selectedDifficulty: Difficulty? = null,
         val availableQuestionsCount: Int = 0,
         val isLoading: Boolean = false,
-        val error: String? = null
+        val error: UiText? = null
     ) : ViewState {
         val isStartEnabled: Boolean
             get() = selectedCategory != null && selectedDifficulty != null && !isLoading
@@ -41,6 +42,6 @@ class SelectionContract {
 
     sealed class Effect : ViewEffect {
         data class NavigateToQuiz(val category: String, val difficulty: Difficulty) : Effect()
-        data class ShowError(val message: String) : Effect()
+        data class ShowError(val error: UiText) : Effect()
     }
 }

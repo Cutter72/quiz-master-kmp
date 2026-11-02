@@ -14,11 +14,11 @@ class ScoreboardContract {
         val categories: List<String> = listOf(
             "All",
             "Sports",
-            "Science",
-            "History",
+            "Science & Nature",
+            "Animals",
             "Geography",
-            "Entertainment",
-            "Technology"
+            "History",
+            "General Knowledge"
         ),
         val selectedCategory: String = "All",
         val totalQuizzes: Int = 0,

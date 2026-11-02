@@ -90,6 +90,8 @@ import quizmaster.shared.generated.resources.quiz_exit_dialog_title
 import quizmaster.shared.generated.resources.quiz_feedback_correct
 import quizmaster.shared.generated.resources.quiz_feedback_incorrect
 import quizmaster.shared.generated.resources.quiz_no_questions_found
+import quizmaster.shared.generated.resources.quiz_loading_questions
+import quizmaster.shared.generated.resources.retry
 import quizmaster.shared.generated.resources.quiz_question_counter
 import quizmaster.shared.generated.resources.quiz_score_label
 import quizmaster.shared.generated.resources.quiz_show_correct_answer
@@ -233,7 +235,7 @@ fun QuizLoadingState() {
             CircularProgressIndicator()
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Loading questions...",
+                text = stringResource(Res.string.quiz_loading_questions),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onBackground
             )
@@ -243,7 +245,7 @@ fun QuizLoadingState() {
 
 @Composable
 fun QuizErrorState(
-    error: String?,
+    error: pl.pdgroup.quiz.util.UiText?,
     onRetry: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
@@ -260,7 +262,7 @@ fun QuizErrorState(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = error ?: stringResource(Res.string.quiz_no_questions_found),
+                    text = error?.asString() ?: stringResource(Res.string.quiz_no_questions_found),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -272,7 +274,7 @@ fun QuizErrorState(
                         Text(stringResource(Res.string.back))
                     }
                     Button(onClick = onRetry) {
-                        Text("Retry")
+                        Text(stringResource(Res.string.retry))
                     }
                 }
             }
