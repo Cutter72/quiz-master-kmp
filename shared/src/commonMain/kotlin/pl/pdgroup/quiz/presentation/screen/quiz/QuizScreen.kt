@@ -129,7 +129,13 @@ fun QuizScreenContent(
     }
 
     if (state.questions.isEmpty()) {
-        QuizErrorState(state.error)
+        QuizErrorState(
+            error = state.error,
+            onRetry = {
+                onIntent(QuizContract.Intent.LoadQuestions(state.category, state.difficulty))
+            },
+            onNavigateBack = onNavigateBack
+        )
         return
     }
 
@@ -219,14 +225,58 @@ fun ExitQuizDialog(onDismiss: () -> Unit, onExit: () -> Unit) {
 @Composable
 fun QuizLoadingState() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(24.dp)
+        ) {
+            CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Loading questions...",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
     }
 }
 
 @Composable
-fun QuizErrorState(error: String?) {
+fun QuizErrorState(
+    error: String?,
+    onRetry: () -> Unit,
+    onNavigateBack: () -> Unit
+) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(error ?: stringResource(Res.string.quiz_no_questions_found))
+        Card(
+            modifier = Modifier
+                .padding(24.dp)
+                .widthIn(max = 500.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = error ?: stringResource(Res.string.quiz_no_questions_found),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(onClick = onNavigateBack) {
+                        Text(stringResource(Res.string.back))
+                    }
+                    Button(onClick = onRetry) {
+                        Text("Retry")
+                    }
+                }
+            }
+        }
     }
 }
 

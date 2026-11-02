@@ -18,9 +18,7 @@ fun QuizRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(category, difficulty) {
-        if (state.questions.isEmpty() && !state.isLoading) {
-            viewModel.loadQuestions(category, difficulty)
-        }
+        viewModel.loadQuestions(category, difficulty)
     }
 
     LaunchedEffect(Unit) {
