@@ -56,8 +56,8 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.QuizCategory
-import pl.pdgroup.quiz.domain.model.QuizScore
 import pl.pdgroup.quiz.presentation.mapper.toStringRes
+import pl.pdgroup.quiz.presentation.model.ScoreUiModel
 import pl.pdgroup.quiz.ui.theme.ErrorDark
 import pl.pdgroup.quiz.ui.theme.ErrorLight
 import pl.pdgroup.quiz.ui.theme.SuccessDark
@@ -355,7 +355,7 @@ fun EmptyState() {
 }
 
 @Composable
-fun ScoreCard(score: QuizScore, delayMs: Long) {
+fun ScoreCard(score: ScoreUiModel, delayMs: Long) {
     val alphaAnim = remember { Animatable(0f) }
     val offsetXAnim = remember { Animatable(-20f) }
 
@@ -366,7 +366,7 @@ fun ScoreCard(score: QuizScore, delayMs: Long) {
     }
 
     val isDark = MaterialTheme.colorScheme.background.red < 0.5f
-    val percentage = ((score.score.toFloat() / score.totalQuestions) * 100).toInt()
+    val percentage = score.percentage
 
     val scoreColor = when {
         percentage >= 80 -> if (isDark) SuccessDark else SuccessLight
@@ -441,7 +441,7 @@ fun ScoreCard(score: QuizScore, delayMs: Long) {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = score.date.take(10),
+                        text = score.formattedDate,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

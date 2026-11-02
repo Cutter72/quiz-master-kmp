@@ -2,8 +2,12 @@ package pl.pdgroup.quiz.presentation.mapper
 
 import org.jetbrains.compose.resources.StringResource
 import pl.pdgroup.quiz.domain.model.Difficulty
+import pl.pdgroup.quiz.domain.model.Question
 import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.domain.model.QuizException
+import pl.pdgroup.quiz.domain.model.QuizScore
+import pl.pdgroup.quiz.presentation.model.QuestionUiModel
+import pl.pdgroup.quiz.presentation.model.ScoreUiModel
 import pl.pdgroup.quiz.util.UiText
 import quizmaster.shared.generated.resources.Res
 import quizmaster.shared.generated.resources.category_all
@@ -36,6 +40,29 @@ fun Difficulty.toStringRes(): StringResource = when (this) {
     Difficulty.EASY -> Res.string.difficulty_easy
     Difficulty.MEDIUM -> Res.string.difficulty_medium
     Difficulty.HARD -> Res.string.difficulty_hard
+}
+
+fun Question.toUiModel(): QuestionUiModel = QuestionUiModel(
+    question = question,
+    correctAnswer = correctAnswer,
+    answers = (incorrectAnswers + correctAnswer).shuffled()
+)
+
+fun QuizScore.toUiModel(fallbackId: Int = 0): ScoreUiModel {
+    val pct = if (totalQuestions > 0) {
+        ((score.toFloat() / totalQuestions) * 100).toInt()
+    } else {
+        0
+    }
+    return ScoreUiModel(
+        id = if (id != 0) id else fallbackId,
+        category = category,
+        difficulty = difficulty,
+        score = score,
+        totalQuestions = totalQuestions,
+        percentage = pct,
+        formattedDate = date.take(10)
+    )
 }
 
 fun Throwable.toUiText(): UiText = when (this) {

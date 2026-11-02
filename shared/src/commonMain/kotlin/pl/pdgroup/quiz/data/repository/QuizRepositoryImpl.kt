@@ -122,7 +122,8 @@ class QuizRepositoryImpl(
                     difficulty = entity.difficulty,
                     score = entity.score,
                     totalQuestions = entity.totalQuestions,
-                    date = entity.date
+                    date = entity.date,
+                    id = entity.id
                 )
             }
         }

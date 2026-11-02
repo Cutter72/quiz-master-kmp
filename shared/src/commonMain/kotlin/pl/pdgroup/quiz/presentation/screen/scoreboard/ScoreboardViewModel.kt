@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import pl.pdgroup.quiz.domain.usecase.GetScoreStatisticsUseCase
 import pl.pdgroup.quiz.domain.usecase.GetScoresUseCase
+import pl.pdgroup.quiz.presentation.mapper.toUiModel
 import pl.pdgroup.quiz.presentation.mvi.BaseViewModel
 
 class ScoreboardViewModel(
@@ -28,16 +29,19 @@ class ScoreboardViewModel(
                 loadScoresJob = viewModelScope.launch {
                     getScoresUseCase().collectLatest { scores ->
                         val stats = getScoreStatisticsUseCase(scores)
+                        val uiScores = scores.mapIndexed { index, score ->
+                            score.toUiModel(fallbackId = -(index + 1))
+                        }
 
                         setState {
                             val category = selectedCategory
                             val filtered = if (category == null) {
-                                scores
+                                uiScores
                             } else {
-                                scores.filter { it.category == category }
+                                uiScores.filter { it.category == category }
                             }
                             copy(
-                                allScores = scores,
+                                allScores = uiScores,
                                 filteredScores = filtered,
                                 totalQuizzes = stats.totalQuizzes,
                                 averageScore = stats.averageScore,

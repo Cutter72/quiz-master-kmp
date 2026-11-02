@@ -418,7 +418,7 @@ fun QuizQuestionContent(state: QuizContract.State, onIntent: (QuizContract.Inten
                 stringResource(Res.string.quiz_option_c),
                 stringResource(Res.string.quiz_option_d)
             )
-            state.shuffledAnswers.forEachIndexed { ansIndex, answer ->
+            question.answers.forEachIndexed { ansIndex, answer ->
                 AnswerOption(
                     answer = answer,
                     letter = letters.getOrElse(ansIndex) { "" },

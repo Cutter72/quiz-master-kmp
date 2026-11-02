@@ -2,8 +2,8 @@ package pl.pdgroup.quiz.presentation.screen.quiz
 
 import androidx.compose.runtime.Immutable
 import pl.pdgroup.quiz.domain.model.Difficulty
-import pl.pdgroup.quiz.domain.model.Question
 import pl.pdgroup.quiz.domain.model.QuizCategory
+import pl.pdgroup.quiz.presentation.model.QuestionUiModel
 import pl.pdgroup.quiz.presentation.mvi.ViewEffect
 import pl.pdgroup.quiz.presentation.mvi.ViewIntent
 import pl.pdgroup.quiz.presentation.mvi.ViewState
@@ -14,17 +14,16 @@ class QuizContract {
     data class State(
         val category: QuizCategory = QuizCategory.GENERAL_KNOWLEDGE,
         val difficulty: Difficulty = Difficulty.EASY,
-        val questions: List<Question> = emptyList(),
+        val questions: List<QuestionUiModel> = emptyList(),
         val currentQuestionIndex: Int = 0,
         val score: Int = 0,
         val selectedAnswer: String? = null,
         val isAnswerLocked: Boolean = false,
         val showCorrectAnswer: Boolean = false,
         val isLoading: Boolean = true,
-        val error: UiText? = null,
-        val shuffledAnswers: List<String> = emptyList()
+        val error: UiText? = null
     ) : ViewState {
-        val currentQuestion: Question?
+        val currentQuestion: QuestionUiModel?
             get() = questions.getOrNull(currentQuestionIndex)
 
         val isLastQuestion: Boolean

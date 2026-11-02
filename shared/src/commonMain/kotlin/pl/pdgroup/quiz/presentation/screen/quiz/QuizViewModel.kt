@@ -3,6 +3,7 @@ package pl.pdgroup.quiz.presentation.screen.quiz
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.domain.usecase.GetQuestionsUseCase
+import pl.pdgroup.quiz.presentation.mapper.toUiModel
 import pl.pdgroup.quiz.presentation.mapper.toUiText
 import pl.pdgroup.quiz.presentation.mvi.BaseViewModel
 import pl.pdgroup.quiz.util.UiText
@@ -33,15 +34,12 @@ class QuizViewModel(
                 val result = getQuestionsUseCase(intent.category, intent.difficulty)
                 result.onSuccess { questions ->
                     if (questions.isNotEmpty()) {
-                        val firstQuestion = questions[0]
-                        val shuffledAnswers =
-                            (firstQuestion.incorrectAnswers + firstQuestion.correctAnswer).shuffled()
+                        val uiQuestions = questions.map { it.toUiModel() }
                         setState {
                             copy(
                                 isLoading = false,
-                                questions = questions,
-                                currentQuestionIndex = 0,
-                                shuffledAnswers = shuffledAnswers
+                                questions = uiQuestions,
+                                currentQuestionIndex = 0
                             )
                         }
                     } else {
@@ -91,17 +89,12 @@ class QuizViewModel(
                     }
                 } else {
                     val nextIndex = currentState.currentQuestionIndex + 1
-                    val nextQuestion = currentState.questions[nextIndex]
-                    val nextShuffledAnswers =
-                        (nextQuestion.incorrectAnswers + nextQuestion.correctAnswer).shuffled()
-
                     setState {
                         copy(
                             currentQuestionIndex = nextIndex,
                             selectedAnswer = null,
                             isAnswerLocked = false,
-                            showCorrectAnswer = false,
-                            shuffledAnswers = nextShuffledAnswers
+                            showCorrectAnswer = false
                         )
                     }
                 }

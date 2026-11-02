@@ -5,5 +5,6 @@ data class QuizScore(
     val difficulty: Difficulty,
     val score: Int,
     val totalQuestions: Int,
-    val date: String
+    val date: String,
+    val id: Int = 0
 )
