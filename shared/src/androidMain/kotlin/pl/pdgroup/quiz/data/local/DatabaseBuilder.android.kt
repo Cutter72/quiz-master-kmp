@@ -7,8 +7,9 @@ import androidx.room.RoomDatabase
 fun getDatabaseBuilder(context: Context): RoomDatabase.Builder<AppDatabase> {
     val appContext = context.applicationContext
     val dbFile = appContext.getDatabasePath("quizmaster.db")
-    return Room.databaseBuilder<AppDatabase>(
+    return Room.databaseBuilder(
         context = appContext,
-        name = dbFile.absolutePath
+        name = dbFile.absolutePath,
+        factory = { AppDatabaseConstructor.initialize() }
     )
 }

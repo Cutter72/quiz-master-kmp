@@ -9,8 +9,9 @@ import platform.Foundation.NSUserDomainMask
 
 fun getDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
     val dbFilePath = documentDirectory() + "/quizmaster.db"
-    return Room.databaseBuilder<AppDatabase>(
-        name = dbFilePath
+    return Room.databaseBuilder(
+        name = dbFilePath,
+        factory = { AppDatabaseConstructor.initialize() }
     )
 }
 
