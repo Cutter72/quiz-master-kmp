@@ -18,15 +18,15 @@ fun ResultRoute(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is ResultContract.Effect.NavigateToHome -> onNavigateHome()
-                is ResultContract.Effect.NavigateToSelection -> onNavigateSelection()
-                is ResultContract.Effect.NavigateToScoreboard -> onNavigateScoreboard()
+                ResultContract.Effect.NavigateToHome -> onNavigateHome()
+                ResultContract.Effect.NavigateToSelection -> onNavigateSelection()
+                ResultContract.Effect.NavigateToScoreboard -> onNavigateScoreboard()
             }
         }
     }
 
     ResultScreen(
         state = state,
-        onIntent = viewModel::handleIntent
+        onIntent = viewModel::onIntent
     )
 }

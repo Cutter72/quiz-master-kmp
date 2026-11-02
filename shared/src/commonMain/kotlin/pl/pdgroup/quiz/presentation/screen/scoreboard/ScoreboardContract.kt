@@ -7,7 +7,8 @@ import pl.pdgroup.quiz.presentation.mvi.ViewEffect
 import pl.pdgroup.quiz.presentation.mvi.ViewIntent
 import pl.pdgroup.quiz.presentation.mvi.ViewState
 
-class ScoreboardContract {
+@Immutable
+object ScoreboardContract {
     @Immutable
     data class State(
         val allScores: List<ScoreUiModel> = emptyList(),
@@ -20,10 +21,13 @@ class ScoreboardContract {
         val isLoading: Boolean = true
     ) : ViewState
 
-    sealed class Intent : ViewIntent {
-        data class SelectCategory(val category: QuizCategory?) : Intent()
-        data object LoadScores : Intent()
+    sealed interface Intent : ViewIntent {
+        data class SelectCategory(val category: QuizCategory?) : Intent
+        data object LoadScores : Intent
+        data object NavigateBack : Intent
     }
 
-    sealed class Effect : ViewEffect
+    sealed interface Effect : ViewEffect {
+        data object NavigateBack : Effect
+    }
 }

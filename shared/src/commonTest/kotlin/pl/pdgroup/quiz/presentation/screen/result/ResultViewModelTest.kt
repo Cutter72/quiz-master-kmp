@@ -67,9 +67,9 @@ class ResultViewModelTest {
     }
 
     @Test
-    fun processIntent_TryAnotherQuiz_emits_NavigateToSelection_effect() = runTest {
+    fun onIntent_TryAnotherQuiz_emits_NavigateToSelection_effect() = runTest {
         val viewModel = createViewModel()
-        viewModel.handleIntent(ResultContract.Intent.TryAnotherQuiz)
+        viewModel.onIntent(ResultContract.Intent.TryAnotherQuiz)
 
         val effect = viewModel.effect.first()
         assertTrue(effect is ResultContract.Effect.NavigateToSelection)

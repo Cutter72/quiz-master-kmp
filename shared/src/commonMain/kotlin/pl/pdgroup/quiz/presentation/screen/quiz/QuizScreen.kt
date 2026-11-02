@@ -70,6 +70,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -105,12 +108,10 @@ import quizmaster.shared.generated.resources.retry
 @Composable
 fun QuizScreen(
     state: QuizContract.State,
-    onNavigateBack: () -> Unit,
     onIntent: (QuizContract.Intent) -> Unit
 ) {
     QuizScreenContent(
         state = state,
-        onNavigateBack = onNavigateBack,
         onIntent = onIntent
     )
 }
@@ -118,16 +119,25 @@ fun QuizScreen(
 @Composable
 fun QuizScreenContent(
     state: QuizContract.State,
-    onNavigateBack: () -> Unit,
     onIntent: (QuizContract.Intent) -> Unit
 ) {
     val isDark = MaterialTheme.colorScheme.background.red < 0.5f
     var showExitDialog by remember { mutableStateOf(false) }
 
+    val navigationState = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
+    NavigationBackHandler(
+        state = navigationState,
+        isBackEnabled = !state.isLoading && state.questions.isNotEmpty() && !showExitDialog,
+        onBackCompleted = { showExitDialog = true }
+    )
+
     if (showExitDialog) {
         ExitQuizDialog(
             onDismiss = { showExitDialog = false },
-            onExit = onNavigateBack
+            onExit = {
+                showExitDialog = false
+                onIntent(QuizContract.Intent.ExitQuiz)
+            }
         )
     }
 
@@ -142,7 +152,9 @@ fun QuizScreenContent(
             onRetry = {
                 onIntent(QuizContract.Intent.RetryLoadQuestions)
             },
-            onNavigateBack = onNavigateBack
+            onNavigateBack = {
+                onIntent(QuizContract.Intent.ExitQuiz)
+            }
         )
         return
     }

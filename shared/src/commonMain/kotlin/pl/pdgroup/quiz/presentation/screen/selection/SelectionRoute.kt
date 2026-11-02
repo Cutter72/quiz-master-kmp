@@ -22,6 +22,7 @@ fun SelectionRoute(
                 is SelectionContract.Effect.NavigateToQuiz -> {
                     onNavigateToQuiz(effect.category, effect.difficulty)
                 }
+                SelectionContract.Effect.NavigateBack -> onNavigateBack()
                 is SelectionContract.Effect.ShowError -> {
                     // Handled in State Error Dialog
                 }
@@ -31,7 +32,6 @@ fun SelectionRoute(
 
     SelectionScreen(
         state = state,
-        onNavigateBack = onNavigateBack,
-        onIntent = viewModel::handleIntent
+        onIntent = viewModel::onIntent
     )
 }

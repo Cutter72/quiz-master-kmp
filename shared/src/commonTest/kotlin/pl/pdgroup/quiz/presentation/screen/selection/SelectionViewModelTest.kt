@@ -41,14 +41,14 @@ class SelectionViewModelTest {
 
     @Test
     fun selectCategory_updates_state() = runTest {
-        viewModel.handleIntent(SelectionContract.Intent.SelectCategory(QuizCategory.SPORTS))
+        viewModel.onIntent(SelectionContract.Intent.SelectCategory(QuizCategory.SPORTS))
 
         assertEquals(QuizCategory.SPORTS, viewModel.state.value.selectedCategory)
     }
 
     @Test
     fun selectDifficulty_updates_state() = runTest {
-        viewModel.handleIntent(SelectionContract.Intent.SelectDifficulty(Difficulty.HARD))
+        viewModel.onIntent(SelectionContract.Intent.SelectDifficulty(Difficulty.HARD))
 
         assertEquals(Difficulty.HARD, viewModel.state.value.selectedDifficulty)
     }
@@ -60,13 +60,20 @@ class SelectionViewModelTest {
         }
         fakeRepository.questionsToReturn = questions
 
-        viewModel.handleIntent(SelectionContract.Intent.SelectCategory(QuizCategory.SPORTS))
-        viewModel.handleIntent(SelectionContract.Intent.SelectDifficulty(Difficulty.EASY))
-        viewModel.handleIntent(SelectionContract.Intent.StartQuiz)
+        viewModel.onIntent(SelectionContract.Intent.SelectCategory(QuizCategory.SPORTS))
+        viewModel.onIntent(SelectionContract.Intent.SelectDifficulty(Difficulty.EASY))
+        viewModel.onIntent(SelectionContract.Intent.StartQuiz)
 
         val effect = viewModel.effect.first()
         assertTrue(effect is SelectionContract.Effect.NavigateToQuiz)
         assertEquals(QuizCategory.SPORTS, effect.category)
         assertEquals(Difficulty.EASY, effect.difficulty)
+    }
+
+    @Test
+    fun navigateBack_emits_NavigateBack_effect() = runTest {
+        viewModel.onIntent(SelectionContract.Intent.NavigateBack)
+
+        assertEquals(SelectionContract.Effect.NavigateBack, viewModel.effect.first())
     }
 }

@@ -75,12 +75,10 @@ import quizmaster.shared.generated.resources.selection_info_selected
 @Composable
 fun SelectionScreen(
     state: SelectionContract.State,
-    onNavigateBack: () -> Unit,
     onIntent: (SelectionContract.Intent) -> Unit
 ) {
     SelectionScreenContent(
         state = state,
-        onNavigateBack = onNavigateBack,
         onIntent = onIntent
     )
 }
@@ -88,7 +86,6 @@ fun SelectionScreen(
 @Composable
 fun SelectionScreenContent(
     state: SelectionContract.State,
-    onNavigateBack: () -> Unit,
     onIntent: (SelectionContract.Intent) -> Unit
 ) {
     if (state.error != null) {
@@ -106,7 +103,9 @@ fun SelectionScreenContent(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            SelectionHeader(onNavigateBack = onNavigateBack)
+            SelectionHeader(
+                onNavigateBack = { onIntent(SelectionContract.Intent.NavigateBack) }
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
 

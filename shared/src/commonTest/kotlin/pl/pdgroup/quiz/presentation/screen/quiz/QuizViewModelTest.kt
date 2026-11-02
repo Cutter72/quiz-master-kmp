@@ -79,7 +79,7 @@ class QuizViewModelTest {
             Question("multiple", Difficulty.EASY, "Sports", "Question $id", "A", listOf("B", "C", "D"))
         }
 
-        viewModel.handleIntent(QuizContract.Intent.RetryLoadQuestions)
+        viewModel.onIntent(QuizContract.Intent.RetryLoadQuestions)
 
         assertNull(viewModel.state.value.error)
         assertEquals(7, viewModel.state.value.questions.size)
@@ -92,7 +92,7 @@ class QuizViewModelTest {
         }
 
         val viewModel = createViewModel()
-        viewModel.handleIntent(QuizContract.Intent.SelectAnswer("Correct"))
+        viewModel.onIntent(QuizContract.Intent.SelectAnswer("Correct"))
 
         assertTrue(viewModel.state.value.isAnswerLocked)
         assertEquals(1, viewModel.state.value.score)
@@ -107,16 +107,25 @@ class QuizViewModelTest {
         val viewModel = createViewModel()
 
         for (i in 0 until 6) {
-            viewModel.handleIntent(QuizContract.Intent.NextQuestion)
+            viewModel.onIntent(QuizContract.Intent.NextQuestion)
         }
 
         assertEquals(6, viewModel.state.value.currentQuestionIndex)
         assertTrue(viewModel.state.value.isLastQuestion)
 
-        viewModel.handleIntent(QuizContract.Intent.NextQuestion)
+        viewModel.onIntent(QuizContract.Intent.NextQuestion)
 
         val effect = viewModel.effect.first()
         assertTrue(effect is QuizContract.Effect.NavigateToResults)
         assertEquals(7, effect.total)
+    }
+
+    @Test
+    fun exitQuiz_emits_NavigateBack_effect() = runTest {
+        val viewModel = createViewModel()
+
+        viewModel.onIntent(QuizContract.Intent.ExitQuiz)
+
+        assertEquals(QuizContract.Effect.NavigateBack, viewModel.effect.first())
     }
 }

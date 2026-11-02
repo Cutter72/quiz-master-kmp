@@ -23,13 +23,7 @@ abstract class BaseViewModel<S : ViewState, I : ViewIntent, E : ViewEffect> : Vi
     private val _effect = Channel<E>(Channel.BUFFERED)
     val effect: Flow<E> = _effect.receiveAsFlow()
 
-    fun handleIntent(intent: I) {
-        viewModelScope.launch {
-            processIntent(intent)
-        }
-    }
-
-    protected abstract suspend fun processIntent(intent: I)
+    abstract fun onIntent(intent: I)
 
     protected fun setState(reduce: S.() -> S) {
         _state.update { it.reduce() }

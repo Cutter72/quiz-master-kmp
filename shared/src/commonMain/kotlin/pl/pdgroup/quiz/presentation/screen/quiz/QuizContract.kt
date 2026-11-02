@@ -9,7 +9,8 @@ import pl.pdgroup.quiz.presentation.mvi.ViewIntent
 import pl.pdgroup.quiz.presentation.mvi.ViewState
 import pl.pdgroup.quiz.util.UiText
 
-class QuizContract {
+@Immutable
+object QuizContract {
     @Immutable
     data class State(
         val category: QuizCategory = QuizCategory.GENERAL_KNOWLEDGE,
@@ -36,21 +37,23 @@ class QuizContract {
             }
     }
 
-    sealed class Intent : ViewIntent {
-        data object RetryLoadQuestions : Intent()
-        data class SelectAnswer(val answer: String) : Intent()
-        data object ShowCorrectAnswer : Intent()
-        data object NextQuestion : Intent()
+    sealed interface Intent : ViewIntent {
+        data object RetryLoadQuestions : Intent
+        data class SelectAnswer(val answer: String) : Intent
+        data object ShowCorrectAnswer : Intent
+        data object NextQuestion : Intent
+        data object ExitQuiz : Intent
     }
 
-    sealed class Effect : ViewEffect {
+    sealed interface Effect : ViewEffect {
         data class NavigateToResults(
             val category: QuizCategory,
             val difficulty: Difficulty,
             val score: Int,
             val total: Int
-        ) : Effect()
+        ) : Effect
 
-        data class ShowError(val error: UiText) : Effect()
+        data object NavigateBack : Effect
+        data class ShowError(val error: UiText) : Effect
     }
 }

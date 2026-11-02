@@ -1,5 +1,7 @@
 package pl.pdgroup.quiz.presentation.screen.selection
 
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 import pl.pdgroup.quiz.domain.usecase.GetQuestionsUseCase
 import pl.pdgroup.quiz.presentation.mapper.toUiText
 import pl.pdgroup.quiz.presentation.mvi.BaseViewModel
@@ -10,7 +12,7 @@ class SelectionViewModel(
 
     override fun createInitialState(): SelectionContract.State = SelectionContract.State()
 
-    override suspend fun processIntent(intent: SelectionContract.Intent) {
+    override fun onIntent(intent: SelectionContract.Intent) {
         when (intent) {
             is SelectionContract.Intent.SelectCategory -> {
                 setState { copy(selectedCategory = intent.category) }
@@ -22,26 +24,32 @@ class SelectionViewModel(
                 updateAvailableQuestions()
             }
 
-            is SelectionContract.Intent.StartQuiz -> {
+            SelectionContract.Intent.StartQuiz -> {
                 val currentState = state.value
                 val category = currentState.selectedCategory
                 val difficulty = currentState.selectedDifficulty
-                if (category != null && difficulty != null) {
-                    setState { copy(isLoading = true, error = null) }
-                    val result = getQuestionsUseCase(category, difficulty, forceRefresh = true)
-                    setState { copy(isLoading = false) }
-                    result.onSuccess {
-                        setEffect { SelectionContract.Effect.NavigateToQuiz(category, difficulty) }
-                    }.onFailure { e ->
-                        val uiError = e.toUiText()
-                        setState { copy(error = uiError) }
-                        setEffect { SelectionContract.Effect.ShowError(uiError) }
+                if (category != null && difficulty != null && !currentState.isLoading) {
+                    viewModelScope.launch {
+                        setState { copy(isLoading = true, error = null) }
+                        val result = getQuestionsUseCase(category, difficulty, forceRefresh = true)
+                        setState { copy(isLoading = false) }
+                        result.onSuccess {
+                            setEffect { SelectionContract.Effect.NavigateToQuiz(category, difficulty) }
+                        }.onFailure { e ->
+                            val uiError = e.toUiText()
+                            setState { copy(error = uiError) }
+                            setEffect { SelectionContract.Effect.ShowError(uiError) }
+                        }
                     }
                 }
             }
 
-            is SelectionContract.Intent.ClearError -> {
+            SelectionContract.Intent.ClearError -> {
                 setState { copy(error = null) }
+            }
+
+            SelectionContract.Intent.NavigateBack -> {
+                setEffect { SelectionContract.Effect.NavigateBack }
             }
         }
     }

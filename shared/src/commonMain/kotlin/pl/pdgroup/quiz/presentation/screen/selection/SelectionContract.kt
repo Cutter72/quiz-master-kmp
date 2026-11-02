@@ -8,7 +8,8 @@ import pl.pdgroup.quiz.presentation.mvi.ViewIntent
 import pl.pdgroup.quiz.presentation.mvi.ViewState
 import pl.pdgroup.quiz.util.UiText
 
-class SelectionContract {
+@Immutable
+object SelectionContract {
     @Immutable
     data class State(
         val categories: List<QuizCategory> = QuizCategory.entries,
@@ -23,15 +24,17 @@ class SelectionContract {
             get() = selectedCategory != null && selectedDifficulty != null && !isLoading
     }
 
-    sealed class Intent : ViewIntent {
-        data class SelectCategory(val category: QuizCategory) : Intent()
-        data class SelectDifficulty(val difficulty: Difficulty) : Intent()
-        data object StartQuiz : Intent()
-        data object ClearError : Intent()
+    sealed interface Intent : ViewIntent {
+        data class SelectCategory(val category: QuizCategory) : Intent
+        data class SelectDifficulty(val difficulty: Difficulty) : Intent
+        data object StartQuiz : Intent
+        data object ClearError : Intent
+        data object NavigateBack : Intent
     }
 
-    sealed class Effect : ViewEffect {
-        data class NavigateToQuiz(val category: QuizCategory, val difficulty: Difficulty) : Effect()
-        data class ShowError(val error: UiText) : Effect()
+    sealed interface Effect : ViewEffect {
+        data class NavigateToQuiz(val category: QuizCategory, val difficulty: Difficulty) : Effect
+        data object NavigateBack : Effect
+        data class ShowError(val error: UiText) : Effect
     }
 }

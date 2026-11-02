@@ -76,12 +76,10 @@ import quizmaster.shared.generated.resources.scoreboard_title
 @Composable
 fun ScoreboardScreen(
     state: ScoreboardContract.State,
-    onNavigateBack: () -> Unit,
     onIntent: (ScoreboardContract.Intent) -> Unit
 ) {
     ScoreboardScreenContent(
         state = state,
-        onNavigateBack = onNavigateBack,
         onIntent = onIntent
     )
 }
@@ -89,7 +87,6 @@ fun ScoreboardScreen(
 @Composable
 fun ScoreboardScreenContent(
     state: ScoreboardContract.State,
-    onNavigateBack: () -> Unit,
     onIntent: (ScoreboardContract.Intent) -> Unit
 ) {
     val isDark = MaterialTheme.colorScheme.background.red < 0.5f
@@ -101,7 +98,9 @@ fun ScoreboardScreenContent(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            ScoreboardHeader(onNavigateBack = onNavigateBack)
+            ScoreboardHeader(
+                onNavigateBack = { onIntent(ScoreboardContract.Intent.NavigateBack) }
+            )
 
             if (state.isLoading) {
                 ScoreboardLoadingState()

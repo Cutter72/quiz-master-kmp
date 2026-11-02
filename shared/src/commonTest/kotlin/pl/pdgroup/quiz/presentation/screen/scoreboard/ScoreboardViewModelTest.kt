@@ -2,6 +2,7 @@ package pl.pdgroup.quiz.presentation.screen.scoreboard
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -56,9 +57,16 @@ class ScoreboardViewModelTest {
 
     @Test
     fun selectCategory_filters_scores_by_category() = runTest {
-        viewModel.handleIntent(ScoreboardContract.Intent.SelectCategory(QuizCategory.SPORTS))
+        viewModel.onIntent(ScoreboardContract.Intent.SelectCategory(QuizCategory.SPORTS))
 
         assertEquals(1, viewModel.state.value.filteredScores.size)
         assertEquals(QuizCategory.SPORTS, viewModel.state.value.filteredScores.first().category)
+    }
+
+    @Test
+    fun navigateBack_emits_NavigateBack_effect() = runTest {
+        viewModel.onIntent(ScoreboardContract.Intent.NavigateBack)
+
+        assertEquals(ScoreboardContract.Effect.NavigateBack, viewModel.effect.first())
     }
 }

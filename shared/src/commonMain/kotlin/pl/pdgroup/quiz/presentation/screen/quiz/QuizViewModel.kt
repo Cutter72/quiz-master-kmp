@@ -65,11 +65,13 @@ class QuizViewModel(
             }
     }
 
-    override suspend fun processIntent(intent: QuizContract.Intent) {
+    override fun onIntent(intent: QuizContract.Intent) {
         when (intent) {
             QuizContract.Intent.RetryLoadQuestions -> {
                 val current = state.value
-                fetchQuestions(current.category, current.difficulty)
+                viewModelScope.launch {
+                    fetchQuestions(current.category, current.difficulty)
+                }
             }
 
             is QuizContract.Intent.SelectAnswer -> {
@@ -115,6 +117,10 @@ class QuizViewModel(
                         )
                     }
                 }
+            }
+
+            QuizContract.Intent.ExitQuiz -> {
+                setEffect { QuizContract.Effect.NavigateBack }
             }
         }
     }

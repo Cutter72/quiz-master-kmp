@@ -59,7 +59,7 @@ class ResultViewModel(
         }
     }
 
-    override suspend fun processIntent(intent: ResultContract.Intent) {
+    override fun onIntent(intent: ResultContract.Intent) {
         when (intent) {
             ResultContract.Intent.TryAnotherQuiz -> setEffect { ResultContract.Effect.NavigateToSelection }
             ResultContract.Intent.ViewScoreboard -> setEffect { ResultContract.Effect.NavigateToScoreboard }

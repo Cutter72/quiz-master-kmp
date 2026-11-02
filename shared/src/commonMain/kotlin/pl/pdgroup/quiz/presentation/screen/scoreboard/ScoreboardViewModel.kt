@@ -19,12 +19,12 @@ class ScoreboardViewModel(
     override fun createInitialState(): ScoreboardContract.State = ScoreboardContract.State()
 
     init {
-        handleIntent(ScoreboardContract.Intent.LoadScores)
+        onIntent(ScoreboardContract.Intent.LoadScores)
     }
 
-    override suspend fun processIntent(intent: ScoreboardContract.Intent) {
+    override fun onIntent(intent: ScoreboardContract.Intent) {
         when (intent) {
-            is ScoreboardContract.Intent.LoadScores -> {
+            ScoreboardContract.Intent.LoadScores -> {
                 if (loadScoresJob?.isActive == true) return
                 loadScoresJob = viewModelScope.launch {
                     getScoresUseCase().collectLatest { scores ->
@@ -65,6 +65,10 @@ class ScoreboardViewModel(
                         filteredScores = filtered
                     )
                 }
+            }
+
+            ScoreboardContract.Intent.NavigateBack -> {
+                setEffect { ScoreboardContract.Effect.NavigateBack }
             }
         }
     }

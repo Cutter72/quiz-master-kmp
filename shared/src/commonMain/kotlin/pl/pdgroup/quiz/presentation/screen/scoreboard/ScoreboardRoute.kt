@@ -1,6 +1,7 @@
 package pl.pdgroup.quiz.presentation.screen.scoreboard
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.viewmodel.koinViewModel
@@ -12,9 +13,16 @@ fun ScoreboardRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                ScoreboardContract.Effect.NavigateBack -> onNavigateBack()
+            }
+        }
+    }
+
     ScoreboardScreen(
         state = state,
-        onNavigateBack = onNavigateBack,
-        onIntent = viewModel::handleIntent
+        onIntent = viewModel::onIntent
     )
 }

@@ -22,6 +22,7 @@ fun QuizRoute(
                 is QuizContract.Effect.NavigateToResults -> {
                     onNavigateToResults(effect.category, effect.difficulty, effect.score, effect.total)
                 }
+                QuizContract.Effect.NavigateBack -> onNavigateBack()
                 is QuizContract.Effect.ShowError -> {
                     // Handled if needed
                 }
@@ -31,7 +32,6 @@ fun QuizRoute(
 
     QuizScreen(
         state = state,
-        onNavigateBack = onNavigateBack,
-        onIntent = viewModel::handleIntent
+        onIntent = viewModel::onIntent
     )
 }
