@@ -23,6 +23,7 @@ navigationCompose = "2.8.0-alpha10"
 room = "2.7.0-alpha13"
 sqlite = "2.5.0-alpha13"
 datastore = "1.1.1"
+koin = "4.0.1"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -68,6 +69,12 @@ androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.r
 
 # DataStore
 androidx-datastore-preferences-core = { module = "androidx.datastore:datastore-preferences-core", version.ref = "datastore" }
+
+# Koin
+koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
+koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
+koin-composeViewModel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
+koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

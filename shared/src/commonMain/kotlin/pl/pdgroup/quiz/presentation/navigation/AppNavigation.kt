@@ -3,19 +3,22 @@ package pl.pdgroup.quiz.presentation.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import pl.pdgroup.quiz.di.AppContainer
+import org.koin.compose.viewmodel.koinViewModel
 import pl.pdgroup.quiz.presentation.screen.home.HomeScreen
 import pl.pdgroup.quiz.presentation.screen.quiz.QuizScreen
+import pl.pdgroup.quiz.presentation.screen.quiz.QuizViewModel
 import pl.pdgroup.quiz.presentation.screen.result.ResultScreen
+import pl.pdgroup.quiz.presentation.screen.result.ResultViewModel
 import pl.pdgroup.quiz.presentation.screen.scoreboard.ScoreboardScreen
+import pl.pdgroup.quiz.presentation.screen.scoreboard.ScoreboardViewModel
 import pl.pdgroup.quiz.presentation.screen.selection.SelectionScreen
+import pl.pdgroup.quiz.presentation.screen.selection.SelectionViewModel
 
 @Composable
 fun AppNavigation(
@@ -25,10 +28,10 @@ fun AppNavigation(
     onToggleTheme: () -> Unit,
     onToggleContrast: () -> Unit
 ) {
-    val selectionViewModel = remember { AppContainer.provideSelectionViewModel() }
-    val quizViewModel = remember { AppContainer.provideQuizViewModel() }
-    val resultViewModel = remember { AppContainer.provideResultViewModel() }
-    val scoreboardViewModel = remember { AppContainer.provideScoreboardViewModel() }
+    val selectionViewModel: SelectionViewModel = koinViewModel()
+    val quizViewModel: QuizViewModel = koinViewModel()
+    val resultViewModel: ResultViewModel = koinViewModel()
+    val scoreboardViewModel: ScoreboardViewModel = koinViewModel()
 
     NavHost(navController = navController, startDestination = "home") {
         composable("home") {
@@ -60,7 +63,7 @@ fun AppNavigation(
                 navArgument("category") { type = NavType.StringType },
                 navArgument("difficulty") { type = NavType.StringType }
             )
-        ) { backStackEntry ->
+        ) {
             val quizState by quizViewModel.state.collectAsState()
 
             QuizScreen(

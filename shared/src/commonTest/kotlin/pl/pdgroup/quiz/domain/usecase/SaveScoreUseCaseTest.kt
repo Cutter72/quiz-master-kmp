@@ -1,6 +1,7 @@
 package pl.pdgroup.quiz.domain.usecase
 
 import kotlinx.coroutines.runBlocking
+import kotlin.time.Clock
 import pl.pdgroup.quiz.domain.model.Difficulty
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -15,7 +16,7 @@ class SaveScoreUseCaseTest {
     @BeforeTest
     fun setUp() {
         fakeRepository = FakeQuizRepository()
-        saveScoreUseCase = SaveScoreUseCase(fakeRepository)
+        saveScoreUseCase = SaveScoreUseCase(fakeRepository, Clock.System)
     }
 
     @Test

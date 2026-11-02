@@ -42,11 +42,16 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.compose.uiTooling)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.koin.android)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
         }
         commonMain.dependencies {
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.composeViewModel)
+
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
