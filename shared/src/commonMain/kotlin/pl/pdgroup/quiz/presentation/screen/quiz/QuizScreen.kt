@@ -82,7 +82,7 @@ import pl.pdgroup.quiz.ui.theme.SuccessLight
 @Composable
 fun QuizScreen(
     state: QuizContract.State,
-    effect: kotlinx.coroutines.flow.SharedFlow<QuizContract.Effect>,
+    effect: kotlinx.coroutines.flow.Flow<QuizContract.Effect>,
     onNavigateBack: () -> Unit,
     onNavigateToResults: (String, Difficulty, Int, Int) -> Unit,
     onIntent: (QuizContract.Intent) -> Unit

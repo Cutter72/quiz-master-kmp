@@ -1,11 +1,13 @@
 package pl.pdgroup.quiz.presentation.screen.result
 
+import androidx.compose.runtime.Immutable
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.presentation.mvi.ViewEffect
 import pl.pdgroup.quiz.presentation.mvi.ViewIntent
 import pl.pdgroup.quiz.presentation.mvi.ViewState
 
 class ResultContract {
+    @Immutable
     data class State(
         val category: String = "",
         val difficulty: Difficulty = Difficulty.EASY,

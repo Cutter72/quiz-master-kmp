@@ -63,7 +63,7 @@ import pl.pdgroup.quiz.ui.theme.SuccessLight
 @Composable
 fun SelectionScreen(
     state: SelectionContract.State,
-    effect: kotlinx.coroutines.flow.SharedFlow<SelectionContract.Effect>,
+    effect: kotlinx.coroutines.flow.Flow<SelectionContract.Effect>,
     onNavigateBack: () -> Unit,
     onNavigateToQuiz: (String, Difficulty) -> Unit,
     onIntent: (SelectionContract.Intent) -> Unit

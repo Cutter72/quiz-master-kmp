@@ -1,11 +1,13 @@
 package pl.pdgroup.quiz.presentation.screen.selection
 
+import androidx.compose.runtime.Immutable
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.presentation.mvi.ViewEffect
 import pl.pdgroup.quiz.presentation.mvi.ViewIntent
 import pl.pdgroup.quiz.presentation.mvi.ViewState
 
 class SelectionContract {
+    @Immutable
     data class State(
         val categories: List<String> = listOf(
             "Sports",

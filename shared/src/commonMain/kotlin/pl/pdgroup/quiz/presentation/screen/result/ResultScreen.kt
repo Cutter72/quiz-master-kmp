@@ -70,7 +70,7 @@ import kotlin.random.Random
 @Composable
 fun ResultScreen(
     state: ResultContract.State,
-    effect: kotlinx.coroutines.flow.SharedFlow<ResultContract.Effect>,
+    effect: kotlinx.coroutines.flow.Flow<ResultContract.Effect>,
     onNavigateHome: () -> Unit,
     onNavigateSelection: () -> Unit,
     onNavigateScoreboard: () -> Unit,
