@@ -4,11 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
+import androidx.navigation.toRoute
 import org.koin.compose.viewmodel.koinViewModel
 import pl.pdgroup.quiz.presentation.screen.home.HomeScreen
 import pl.pdgroup.quiz.presentation.screen.quiz.QuizScreen
@@ -33,18 +32,18 @@ fun AppNavigation(
     val resultViewModel: ResultViewModel = koinViewModel()
     val scoreboardViewModel: ScoreboardViewModel = koinViewModel()
 
-    NavHost(navController = navController, startDestination = "home") {
-        composable("home") {
+    NavHost(navController = navController, startDestination = HomeRoute) {
+        composable<HomeRoute> {
             HomeScreen(
                 isDarkMode = isDarkMode,
                 isHighContrast = isHighContrast,
                 onToggleTheme = onToggleTheme,
                 onToggleContrast = onToggleContrast,
-                onNavigateToSelection = { navController.navigate("selection") },
-                onNavigateToScoreboard = { navController.navigate("scoreboard") }
+                onNavigateToSelection = { navController.navigate(SelectionRoute) },
+                onNavigateToScoreboard = { navController.navigate(ScoreboardRoute) }
             )
         }
-        composable("selection") {
+        composable<SelectionRoute> {
             val selectionState by selectionViewModel.state.collectAsState()
             SelectionScreen(
                 state = selectionState,
@@ -52,66 +51,54 @@ fun AppNavigation(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToQuiz = { category, difficulty ->
                     quizViewModel.loadQuestions(category, difficulty)
-                    navController.navigate("quiz/$category/${difficulty.name}")
+                    navController.navigate(QuizRoute(category, difficulty.name))
                 },
                 onIntent = { selectionViewModel.handleIntent(it) }
             )
         }
-        composable(
-            route = "quiz/{category}/{difficulty}",
-            arguments = listOf(
-                navArgument("category") { type = NavType.StringType },
-                navArgument("difficulty") { type = NavType.StringType }
-            )
-        ) {
+        composable<QuizRoute> { backStackEntry ->
+            val route: QuizRoute = backStackEntry.toRoute()
             val quizState by quizViewModel.state.collectAsState()
 
             QuizScreen(
                 state = quizState,
                 effect = quizViewModel.effect,
-                onNavigateBack = { navController.popBackStack("home", inclusive = false) },
+                onNavigateBack = { navController.popBackStack(HomeRoute, inclusive = false) },
                 onNavigateToResults = { resCat, resDiff, score, total ->
                     resultViewModel.initResult(resCat, resDiff, score, total)
-                    navController.navigate("result/$resCat/${resDiff.name}/$score/$total") {
-                        popUpTo("home") { inclusive = false }
+                    navController.navigate(ResultRoute(resCat, resDiff.name, score, total)) {
+                        popUpTo(HomeRoute) { inclusive = false }
                     }
                 },
                 onIntent = { quizViewModel.handleIntent(it) }
             )
         }
-        composable(
-            route = "result/{category}/{difficulty}/{score}/{total}",
-            arguments = listOf(
-                navArgument("category") { type = NavType.StringType },
-                navArgument("difficulty") { type = NavType.StringType },
-                navArgument("score") { type = NavType.IntType },
-                navArgument("total") { type = NavType.IntType }
-            )
-        ) {
+        composable<ResultRoute> { backStackEntry ->
+            val route: ResultRoute = backStackEntry.toRoute()
             val resultState by resultViewModel.state.collectAsState()
 
             ResultScreen(
                 state = resultState,
                 effect = resultViewModel.effect,
                 onNavigateHome = {
-                    navController.navigate("home") {
-                        popUpTo("home") { inclusive = true }
+                    navController.navigate(HomeRoute) {
+                        popUpTo(HomeRoute) { inclusive = true }
                     }
                 },
                 onNavigateSelection = {
-                    navController.navigate("selection") {
-                        popUpTo("home") { inclusive = false }
+                    navController.navigate(SelectionRoute) {
+                        popUpTo(HomeRoute) { inclusive = false }
                     }
                 },
                 onNavigateScoreboard = {
-                    navController.navigate("scoreboard") {
-                        popUpTo("home") { inclusive = false }
+                    navController.navigate(ScoreboardRoute) {
+                        popUpTo(HomeRoute) { inclusive = false }
                     }
                 },
                 onIntent = { resultViewModel.handleIntent(it) }
             )
         }
-        composable("scoreboard") {
+        composable<ScoreboardRoute> {
             val scoreboardState by scoreboardViewModel.state.collectAsState()
 
             ScoreboardScreen(
