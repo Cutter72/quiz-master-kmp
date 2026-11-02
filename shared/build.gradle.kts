@@ -72,6 +72,9 @@ kotlin {
             implementation(libs.ktor.serialization.kotlinx.json)
 
             implementation(libs.androidx.datastore.preferences.core)
+
+            implementation(libs.androidx.room.runtime)
+            implementation(libs.androidx.sqlite.bundled)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

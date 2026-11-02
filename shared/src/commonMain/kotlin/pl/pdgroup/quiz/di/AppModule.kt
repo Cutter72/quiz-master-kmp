@@ -12,7 +12,6 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.module
-import pl.pdgroup.quiz.data.local.InMemoryScoreDao
 import pl.pdgroup.quiz.data.local.ScoreDao
 import pl.pdgroup.quiz.data.local.SettingsManager
 import pl.pdgroup.quiz.data.remote.api.OpenTdbApi
@@ -45,7 +44,8 @@ val appModule = module {
     }
 
     single<OpenTdbApi> { OpenTdbApiImpl(get()) }
-    single<ScoreDao> { InMemoryScoreDao() }
+    single { pl.pdgroup.quiz.data.local.getRoomDatabase(get()) }
+    single { get<pl.pdgroup.quiz.data.local.AppDatabase>().scoreDao() }
     singleOf(::SettingsManager)
 
     single<QuizRepository> { QuizRepositoryImpl(get(), get()) }
