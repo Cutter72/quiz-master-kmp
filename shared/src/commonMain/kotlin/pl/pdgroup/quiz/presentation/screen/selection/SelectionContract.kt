@@ -35,6 +35,5 @@ object SelectionContract {
     sealed interface Effect : ViewEffect {
         data class NavigateToQuiz(val category: QuizCategory, val difficulty: Difficulty) : Effect
         data object NavigateBack : Effect
-        data class ShowError(val error: UiText) : Effect
     }
 }

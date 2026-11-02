@@ -17,6 +17,9 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -63,6 +66,25 @@ class ResultViewModelTest {
         assertEquals(Difficulty.HARD, viewModel.state.value.difficulty)
         assertEquals(80, viewModel.state.value.percentage)
         assertTrue(viewModel.state.value.isSaved)
+        assertNull(viewModel.state.value.saveError)
+        assertEquals(1, fakeRepository.savedScores.size)
+    }
+
+    @Test
+    fun saveScore_failure_populates_saveError_and_RetrySaveScore_recovers() = runTest {
+        fakeRepository.shouldFailSaveScore = true
+
+        val viewModel = createViewModel(QuizCategory.SPORTS, Difficulty.HARD, 8, 10)
+
+        assertFalse(viewModel.state.value.isSaved)
+        assertNotNull(viewModel.state.value.saveError)
+        assertEquals(0, fakeRepository.savedScores.size)
+
+        fakeRepository.shouldFailSaveScore = false
+        viewModel.onIntent(ResultContract.Intent.RetrySaveScore)
+
+        assertTrue(viewModel.state.value.isSaved)
+        assertNull(viewModel.state.value.saveError)
         assertEquals(1, fakeRepository.savedScores.size)
     }
 

@@ -54,6 +54,5 @@ object QuizContract {
         ) : Effect
 
         data object NavigateBack : Effect
-        data class ShowError(val error: UiText) : Effect
     }
 }

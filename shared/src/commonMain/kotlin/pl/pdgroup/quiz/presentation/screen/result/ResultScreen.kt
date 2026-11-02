@@ -11,11 +11,13 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -64,6 +66,7 @@ import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.presentation.mapper.toStringRes
 import pl.pdgroup.quiz.ui.theme.QuizTheme
+import pl.pdgroup.quiz.util.UiText
 import quizmaster.shared.generated.resources.Res
 import quizmaster.shared.generated.resources.result_btn_back_to_home
 import quizmaster.shared.generated.resources.result_btn_try_another
@@ -77,6 +80,7 @@ import quizmaster.shared.generated.resources.result_not_bad
 import quizmaster.shared.generated.resources.result_pct_correct
 import quizmaster.shared.generated.resources.result_perfect_score
 import quizmaster.shared.generated.resources.result_score_fraction
+import quizmaster.shared.generated.resources.retry
 import kotlin.random.Random
 
 @Composable
@@ -136,6 +140,13 @@ fun ResultScreenContent(
                 difficulty = state.difficulty
             )
 
+            state.saveError?.let { error ->
+                ResultSaveErrorBanner(
+                    error = error,
+                    onRetry = { onIntent(ResultContract.Intent.RetrySaveScore) }
+                )
+            }
+
             ResultActionButtons(
                 onTryAnother = { onIntent(ResultContract.Intent.TryAnotherQuiz) },
                 onViewScoreboard = { onIntent(ResultContract.Intent.ViewScoreboard) },
@@ -143,6 +154,43 @@ fun ResultScreenContent(
             )
 
             Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+@Composable
+fun ResultSaveErrorBanner(
+    error: UiText,
+    onRetry: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 24.dp),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = error.asString(),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 12.dp)
+            )
+            OutlinedButton(onClick = onRetry) {
+                Text(stringResource(Res.string.retry))
+            }
         }
     }
 }

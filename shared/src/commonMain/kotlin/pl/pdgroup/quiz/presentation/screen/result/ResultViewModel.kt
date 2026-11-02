@@ -61,6 +61,11 @@ class ResultViewModel(
 
     override fun onIntent(intent: ResultContract.Intent) {
         when (intent) {
+            ResultContract.Intent.RetrySaveScore -> {
+                viewModelScope.launch {
+                    persistScoreIfNeeded()
+                }
+            }
             ResultContract.Intent.TryAnotherQuiz -> setEffect { ResultContract.Effect.NavigateToSelection }
             ResultContract.Intent.ViewScoreboard -> setEffect { ResultContract.Effect.NavigateToScoreboard }
             ResultContract.Intent.BackToHome -> setEffect { ResultContract.Effect.NavigateToHome }

@@ -36,9 +36,7 @@ class SelectionViewModel(
                         result.onSuccess {
                             setEffect { SelectionContract.Effect.NavigateToQuiz(category, difficulty) }
                         }.onFailure { e ->
-                            val uiError = e.toUiText()
-                            setState { copy(error = uiError) }
-                            setEffect { SelectionContract.Effect.ShowError(uiError) }
+                            setState { copy(error = e.toUiText()) }
                         }
                     }
                 }

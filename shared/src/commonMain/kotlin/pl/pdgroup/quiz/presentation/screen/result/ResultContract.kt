@@ -22,6 +22,7 @@ object ResultContract {
     ) : ViewState
 
     sealed interface Intent : ViewIntent {
+        data object RetrySaveScore : Intent
         data object TryAnotherQuiz : Intent
         data object ViewScoreboard : Intent
         data object BackToHome : Intent

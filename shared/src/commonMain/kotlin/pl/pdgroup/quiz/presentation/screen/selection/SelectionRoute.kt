@@ -23,9 +23,6 @@ fun SelectionRoute(
                     onNavigateToQuiz(effect.category, effect.difficulty)
                 }
                 SelectionContract.Effect.NavigateBack -> onNavigateBack()
-                is SelectionContract.Effect.ShowError -> {
-                    // Handled in State Error Dialog
-                }
             }
         }
     }

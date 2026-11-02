@@ -23,9 +23,6 @@ fun QuizRoute(
                     onNavigateToResults(effect.category, effect.difficulty, effect.score, effect.total)
                 }
                 QuizContract.Effect.NavigateBack -> onNavigateBack()
-                is QuizContract.Effect.ShowError -> {
-                    // Handled if needed
-                }
             }
         }
     }
