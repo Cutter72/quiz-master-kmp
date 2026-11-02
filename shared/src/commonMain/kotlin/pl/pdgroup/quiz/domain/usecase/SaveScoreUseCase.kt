@@ -14,7 +14,7 @@ class SaveScoreUseCase(
         difficulty: Difficulty,
         score: Int,
         totalQuestions: Int
-    ) {
+    ): Result<Unit> {
         val dateString = clock.now().toString()
 
         val quizScore = QuizScore(
@@ -24,6 +24,6 @@ class SaveScoreUseCase(
             totalQuestions = totalQuestions,
             date = dateString
         )
-        repository.saveScore(quizScore)
+        return repository.saveScore(quizScore)
     }
 }

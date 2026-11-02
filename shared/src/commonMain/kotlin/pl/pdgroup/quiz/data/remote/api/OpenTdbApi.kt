@@ -24,7 +24,7 @@ class OpenTdbApiImpl(
         difficulty: String,
         type: String
     ): OpenTdbResponse {
-        return client.get("https://opentdb.com/api.php") {
+        return client.get("api.php") {
             parameter("amount", amount)
             parameter("category", category)
             parameter("difficulty", difficulty)

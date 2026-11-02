@@ -30,14 +30,15 @@ class ResultViewModel(
                 }
 
                 if (!state.value.isSaved) {
-                    try {
-                        saveScoreUseCase(intent.category, intent.difficulty, score, total)
-                        setState { copy(isSaved = true, saveError = null) }
-                    } catch (e: Exception) {
-                        val uiError = e.message?.let { UiText.DynamicString(it) }
-                            ?: UiText.Resource(Res.string.error_unknown)
-                        setState { copy(saveError = uiError) }
-                    }
+                    saveScoreUseCase(intent.category, intent.difficulty, score, total)
+                        .onSuccess {
+                            setState { copy(isSaved = true, saveError = null) }
+                        }
+                        .onFailure { e ->
+                            val uiError = e.message?.let { UiText.DynamicString(it) }
+                                ?: UiText.Resource(Res.string.error_unknown)
+                            setState { copy(saveError = uiError) }
+                        }
                 }
             }
             ResultContract.Intent.TryAnotherQuiz -> setEffect { ResultContract.Effect.NavigateToSelection }

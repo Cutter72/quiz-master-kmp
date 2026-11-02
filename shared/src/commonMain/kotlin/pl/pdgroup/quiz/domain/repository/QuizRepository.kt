@@ -10,8 +10,8 @@ interface QuizRepository {
         category: String,
         difficulty: Difficulty,
         forceRefresh: Boolean = false
-    ): List<Question>
+    ): Result<List<Question>>
 
     fun getScores(): Flow<List<QuizScore>>
-    suspend fun saveScore(score: QuizScore)
+    suspend fun saveScore(score: QuizScore): Result<Unit>
 }

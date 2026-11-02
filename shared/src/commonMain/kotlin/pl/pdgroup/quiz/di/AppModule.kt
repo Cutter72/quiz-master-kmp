@@ -2,6 +2,8 @@ package pl.pdgroup.quiz.di
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.plugins.DefaultRequest
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import kotlin.time.Clock
@@ -35,12 +37,26 @@ import pl.pdgroup.quiz.util.DispatcherProvider
 val appModule = module {
     single<DispatcherProvider> { DefaultDispatcherProvider() }
     single<Clock> { Clock.System }
-    single { Json { ignoreUnknownKeys = true } }
+    single {
+        Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+        }
+    }
 
     single {
         HttpClient(get<HttpClientEngine>()) {
+            expectSuccess = true
             install(ContentNegotiation) {
                 json(get())
+            }
+            install(HttpTimeout) {
+                requestTimeoutMillis = 15_000
+                connectTimeoutMillis = 10_000
+                socketTimeoutMillis = 15_000
+            }
+            install(DefaultRequest) {
+                url("https://opentdb.com/")
             }
         }
     }

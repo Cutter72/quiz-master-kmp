@@ -3,9 +3,11 @@ package pl.pdgroup.quiz.domain.usecase
 import kotlinx.coroutines.test.runTest
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.Question
+import pl.pdgroup.quiz.domain.model.QuizException
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class GetQuestionsUseCaseTest {
@@ -33,14 +35,14 @@ class GetQuestionsUseCaseTest {
     }
 
     @Test
-    fun invoke_returns_failure_when_repository_throws_exception() = runTest {
+    fun invoke_returns_failure_when_repository_returns_network_error() = runTest {
         fakeRepository.shouldThrowException = true
 
         val result = getQuestionsUseCase("Any Category", Difficulty.HARD)
 
         assertTrue(result.isFailure)
         result.onFailure { error ->
-            assertEquals("Network error", error.message)
+            assertIs<QuizException.NetworkError>(error)
         }
     }
 
