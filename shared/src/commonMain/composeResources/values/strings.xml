@@ -1,0 +1,76 @@
+<resources>
+    <!-- App & General -->
+    <string name="app_name">Quiz Master</string>
+    <string name="back">Back</string>
+    <string name="ok">OK</string>
+    <string name="notice">Notice</string>
+
+    <!-- Home Screen -->
+    <string name="home_hero_title">Quiz Master</string>
+    <string name="home_hero_subtitle">Test your knowledge across multiple categories</string>
+    <string name="home_start_quiz_title">Start Quiz</string>
+    <string name="home_start_quiz_desc">Choose a category and difficulty level</string>
+    <string name="home_scoreboard_title">Scoreboard</string>
+    <string name="home_scoreboard_desc">View your quiz history and scores</string>
+    <string name="home_footer_info">Answer all questions to save your score</string>
+    <string name="toggle_theme">Toggle Theme</string>
+    <string name="toggle_contrast">Toggle Contrast</string>
+
+    <!-- Selection Screen -->
+    <string name="selection_header_title">Select Quiz Options</string>
+    <string name="selection_category_title">Choose a Category</string>
+    <string name="selection_difficulty_title">Choose Difficulty</string>
+    <string name="selection_info_selected">You selected %1$s with %2$s difficulty</string>
+    <string name="selection_info_questions_available">%1$d question(s) available • Complete all to save your score</string>
+
+    <!-- Quiz Screen -->
+    <string name="quiz_question_counter">Question %1$d of %2$d</string>
+    <string name="quiz_score_label">Score</string>
+    <string name="quiz_exit_dialog_title">Exit quiz?</string>
+    <string name="quiz_exit_dialog_message">Your progress won\'t be saved.</string>
+    <string name="quiz_exit_dialog_exit">Exit</string>
+    <string name="quiz_exit_dialog_resume">Resume</string>
+    <string name="quiz_feedback_correct">Correct! +1 Point</string>
+    <string name="quiz_feedback_incorrect">Incorrect!</string>
+    <string name="quiz_show_correct_answer">Show Correct Answer</string>
+    <string name="quiz_correct_answer_prefix">Correct answer: %1$s</string>
+    <string name="quiz_btn_view_results">View Results</string>
+    <string name="quiz_btn_next_question">Next Question</string>
+    <string name="quiz_no_questions_found">No questions available</string>
+    <string name="quiz_not_enough_questions">Not enough questions available for %1$s - %2$s. Only %3$d question(s) found. Please try another combination.</string>
+
+    <!-- Result Screen -->
+    <string name="result_perfect_score">Perfect Score! 🎉</string>
+    <string name="result_excellent">Excellent! 🌟</string>
+    <string name="result_good_job">Good Job! 👍</string>
+    <string name="result_not_bad">Not Bad! 💪</string>
+    <string name="result_keep_practicing">Keep Practicing! 📚</string>
+    <string name="result_pct_correct">%1$d%% Correct</string>
+    <string name="result_category_fmt">Category: %1$s</string>
+    <string name="result_difficulty_fmt">Difficulty: %1$s</string>
+    <string name="result_btn_try_another">Try Another Quiz</string>
+    <string name="result_btn_view_scoreboard">View Scoreboard</string>
+    <string name="result_btn_back_to_home">Back to Home</string>
+
+    <!-- Scoreboard Screen -->
+    <string name="scoreboard_title">Scoreboard</string>
+    <string name="scoreboard_stat_quizzes">Quizzes</string>
+    <string name="scoreboard_stat_average">Average</string>
+    <string name="scoreboard_stat_best">Best</string>
+    <string name="scoreboard_empty_title">No scores yet</string>
+    <string name="scoreboard_empty_subtitle">Complete a quiz to see your scores here</string>
+
+    <!-- Categories -->
+    <string name="category_all">All</string>
+    <string name="category_sports">Sports</string>
+    <string name="category_science">Science &amp; Nature</string>
+    <string name="category_animals">Animals</string>
+    <string name="category_geography">Geography</string>
+    <string name="category_history">History</string>
+    <string name="category_general_knowledge">General Knowledge</string>
+
+    <!-- Difficulties -->
+    <string name="difficulty_easy">Easy</string>
+    <string name="difficulty_medium">Medium</string>
+    <string name="difficulty_hard">Hard</string>
+</resources>
