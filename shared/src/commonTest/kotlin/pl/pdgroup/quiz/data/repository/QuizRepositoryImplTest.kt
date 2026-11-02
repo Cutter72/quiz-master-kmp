@@ -9,6 +9,7 @@ import pl.pdgroup.quiz.data.local.ScoreDao
 import pl.pdgroup.quiz.data.local.ScoreEntity
 import pl.pdgroup.quiz.data.remote.api.OpenTdbApi
 import pl.pdgroup.quiz.data.remote.model.OpenTdbResponse
+import pl.pdgroup.quiz.data.remote.model.QuestionDto
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.QuizException
 import pl.pdgroup.quiz.domain.model.QuizScore
@@ -85,6 +86,34 @@ class QuizRepositoryImplTest {
         assertTrue(result.isFailure)
         assertIs<QuizException.NetworkError>(result.exceptionOrNull())
     }
+
+    @Test
+    fun getQuestions_returns_cached_entry_without_refetching_unless_forceRefresh() = runTest {
+        val sampleDtos = List(7) { idx ->
+            QuestionDto(
+                type = "multiple",
+                difficulty = "easy",
+                category = "Sports",
+                question = "Q$idx",
+                correctAnswer = "A",
+                incorrectAnswers = listOf("B", "C", "D")
+            )
+        }
+        fakeApi.responseToReturn = OpenTdbResponse(responseCode = 0, results = sampleDtos)
+
+        val first = repository.getQuestions("Sports", Difficulty.EASY, forceRefresh = false)
+        assertTrue(first.isSuccess)
+        assertEquals(1, fakeApi.callCount)
+
+        val second = repository.getQuestions("Sports", Difficulty.EASY, forceRefresh = false)
+        assertTrue(second.isSuccess)
+        assertEquals(1, fakeApi.callCount)
+
+        fakeApi.exceptionToThrow = IOException("Offline")
+        val fallback = repository.getQuestions("Sports", Difficulty.EASY, forceRefresh = true)
+        assertTrue(fallback.isSuccess)
+        assertEquals(7, fallback.getOrNull()?.size)
+    }
 }
 
 class FakeScoreDao : ScoreDao {
@@ -101,6 +130,7 @@ class FakeScoreDao : ScoreDao {
 }
 
 class FakeOpenTdbApi : OpenTdbApi {
+    var callCount: Int = 0
     var exceptionToThrow: Exception? = null
     var responseToReturn: OpenTdbResponse = OpenTdbResponse(responseCode = 0, results = emptyList())
 
@@ -110,6 +140,7 @@ class FakeOpenTdbApi : OpenTdbApi {
         difficulty: String,
         type: String
     ): OpenTdbResponse {
+        callCount++
         exceptionToThrow?.let { throw it }
         return responseToReturn
     }

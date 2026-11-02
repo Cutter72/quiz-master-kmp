@@ -4,6 +4,8 @@ import io.ktor.client.plugins.ResponseException
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import pl.pdgroup.quiz.data.local.ScoreDao
@@ -24,9 +26,14 @@ class QuizRepositoryImpl(
     private val dispatcherProvider: DispatcherProvider
 ) : QuizRepository {
 
-    private var cachedQuestions: List<Question>? = null
-    private var lastCategory: String? = null
-    private var lastDifficulty: Difficulty? = null
+    private data class QuestionCacheEntry(
+        val category: String,
+        val difficulty: Difficulty,
+        val questions: List<Question>
+    )
+
+    private val cacheMutex = Mutex()
+    private var cacheEntry: QuestionCacheEntry? = null
 
     override suspend fun getQuestions(
         category: String,
@@ -34,66 +41,75 @@ class QuizRepositoryImpl(
         forceRefresh: Boolean
     ): Result<List<Question>> {
         return withContext(dispatcherProvider.io) {
-            if (!forceRefresh && cachedQuestions != null && lastCategory == category && lastDifficulty == difficulty) {
-                return@withContext Result.success(cachedQuestions!!)
-            }
+            cacheMutex.withLock {
+                val existing = cacheEntry
+                if (!forceRefresh && existing != null && existing.category == category && existing.difficulty == difficulty) {
+                    return@withContext Result.success(existing.questions)
+                }
 
-            val categoryId = CategoryMapper.getCategoryId(category)
-            val diffString = difficulty.name.lowercase()
+                val categoryId = CategoryMapper.getCategoryId(category)
+                val diffString = difficulty.name.lowercase()
 
-            try {
-                var apiResponse = openTdbApi.getQuestions(
-                    amount = 15,
-                    category = categoryId,
-                    difficulty = diffString
-                )
-
-                if (apiResponse.responseCode != 0 || apiResponse.results.size < 7) {
-                    val fallbackResponse = openTdbApi.getQuestions(
-                        amount = 10,
+                try {
+                    var apiResponse = openTdbApi.getQuestions(
+                        amount = 15,
                         category = categoryId,
                         difficulty = diffString
                     )
-                    if (fallbackResponse.responseCode == 0 && fallbackResponse.results.isNotEmpty()) {
-                        apiResponse = fallbackResponse
+
+                    if (apiResponse.responseCode != 0 || apiResponse.results.size < 7) {
+                        val fallbackResponse = openTdbApi.getQuestions(
+                            amount = 10,
+                            category = categoryId,
+                            difficulty = diffString
+                        )
+                        if (fallbackResponse.responseCode == 0 && fallbackResponse.results.isNotEmpty()) {
+                            apiResponse = fallbackResponse
+                        }
+                    }
+
+                    val questions = apiResponse.results.map { dto ->
+                        dto.toDomain()
+                    }
+
+                    cacheEntry = QuestionCacheEntry(
+                        category = category,
+                        difficulty = difficulty,
+                        questions = questions
+                    )
+
+                    Result.success(questions)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: ResponseException) {
+                    fallbackCachedOrFailure(existing, category, difficulty) {
+                        QuizException.ServerError(e.response.status.value, e)
+                    }
+                } catch (e: IOException) {
+                    fallbackCachedOrFailure(existing, category, difficulty) {
+                        QuizException.NetworkError(e)
+                    }
+                } catch (e: QuizException) {
+                    Result.failure(e)
+                } catch (e: Exception) {
+                    fallbackCachedOrFailure(existing, category, difficulty) {
+                        QuizException.UnknownError(e)
                     }
                 }
-
-                val questions = apiResponse.results.map { dto ->
-                    dto.toDomain()
-                }
-
-                lastCategory = category
-                lastDifficulty = difficulty
-                cachedQuestions = questions
-
-                Result.success(questions)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: ResponseException) {
-                val cached = cachedQuestions
-                if (cached != null && lastCategory == category && lastDifficulty == difficulty) {
-                    Result.success(cached)
-                } else {
-                    Result.failure(QuizException.ServerError(e.response.status.value, e))
-                }
-            } catch (e: IOException) {
-                val cached = cachedQuestions
-                if (cached != null && lastCategory == category && lastDifficulty == difficulty) {
-                    Result.success(cached)
-                } else {
-                    Result.failure(QuizException.NetworkError(e))
-                }
-            } catch (e: QuizException) {
-                Result.failure(e)
-            } catch (e: Exception) {
-                val cached = cachedQuestions
-                if (cached != null && lastCategory == category && lastDifficulty == difficulty) {
-                    Result.success(cached)
-                } else {
-                    Result.failure(QuizException.UnknownError(e))
-                }
             }
+        }
+    }
+
+    private inline fun fallbackCachedOrFailure(
+        existing: QuestionCacheEntry?,
+        category: String,
+        difficulty: Difficulty,
+        errorProvider: () -> QuizException
+    ): Result<List<Question>> {
+        return if (existing != null && existing.category == category && existing.difficulty == difficulty) {
+            Result.success(existing.questions)
+        } else {
+            Result.failure(errorProvider())
         }
     }
 
