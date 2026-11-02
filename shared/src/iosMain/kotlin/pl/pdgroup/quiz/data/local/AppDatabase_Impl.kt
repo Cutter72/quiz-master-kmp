@@ -15,6 +15,8 @@ class AppDatabase_Impl : AppDatabase() {
     override fun createInvalidationTracker(): InvalidationTracker {
         return InvalidationTracker(this, emptyMap(), emptyMap(), "scores")
     }
+
+    override fun clearAllTables() {}
 }
 
 class RoomScoreDao : ScoreDao {

@@ -1,6 +1,9 @@
 package pl.pdgroup.quiz.data.local
 
+import androidx.room.DatabaseConfiguration
 import androidx.room.InvalidationTracker
+import androidx.sqlite.db.SupportSQLiteOpenHelper
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,6 +17,25 @@ class AppDatabase_Impl : AppDatabase() {
     @Suppress("RestrictedApi")
     override fun createInvalidationTracker(): InvalidationTracker {
         return InvalidationTracker(this, emptyMap(), emptyMap(), "scores")
+    }
+
+    @Suppress("OVERRIDE_DEPRECATION")
+    override fun createOpenHelper(config: DatabaseConfiguration): SupportSQLiteOpenHelper {
+        val factory = config.sqliteOpenHelperFactory ?: FrameworkSQLiteOpenHelperFactory()
+        return factory.create(
+            SupportSQLiteOpenHelper.Configuration.builder(config.context)
+                .name(config.name)
+                .callback(object : SupportSQLiteOpenHelper.Callback(1) {
+                    override fun onCreate(db: androidx.sqlite.db.SupportSQLiteDatabase) {}
+                    override fun onUpgrade(
+                        db: androidx.sqlite.db.SupportSQLiteDatabase,
+                        oldVersion: Int,
+                        newVersion: Int
+                    ) {
+                    }
+                })
+                .build()
+        )
     }
 
     override fun clearAllTables() {}
