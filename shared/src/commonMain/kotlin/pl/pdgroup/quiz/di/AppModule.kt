@@ -20,7 +20,9 @@ import pl.pdgroup.quiz.data.local.SettingsManager
 import pl.pdgroup.quiz.data.remote.api.OpenTdbApi
 import pl.pdgroup.quiz.data.remote.api.OpenTdbApiImpl
 import pl.pdgroup.quiz.data.repository.QuizRepositoryImpl
+import pl.pdgroup.quiz.data.repository.SettingsRepositoryImpl
 import pl.pdgroup.quiz.domain.repository.QuizRepository
+import pl.pdgroup.quiz.domain.repository.SettingsRepository
 import pl.pdgroup.quiz.domain.usecase.GetQuestionsUseCase
 import pl.pdgroup.quiz.domain.usecase.GetScoreStatisticsUseCase
 import pl.pdgroup.quiz.domain.usecase.GetScoresUseCase
@@ -65,6 +67,7 @@ val appModule = module {
     single { pl.pdgroup.quiz.data.local.getRoomDatabase(get(), get()) }
     single { get<pl.pdgroup.quiz.data.local.AppDatabase>().scoreDao() }
     singleOf(::SettingsManager)
+    single<SettingsRepository> { SettingsRepositoryImpl(get(), get()) }
 
     single<QuizRepository> { QuizRepositoryImpl(get(), get(), get()) }
 

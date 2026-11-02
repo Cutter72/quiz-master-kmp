@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import pl.pdgroup.quiz.data.local.SettingsManager
+import pl.pdgroup.quiz.domain.repository.SettingsRepository
 
 @Immutable
 data class ThemeState(
@@ -17,12 +17,12 @@ data class ThemeState(
 )
 
 class MainViewModel(
-    private val settingsManager: SettingsManager
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     val themeState: StateFlow<ThemeState> = combine(
-        settingsManager.isDarkMode,
-        settingsManager.isHighContrast
+        settingsRepository.isDarkMode,
+        settingsRepository.isHighContrast
     ) { isDark, isHigh ->
         ThemeState(isDarkMode = isDark, isHighContrast = isHigh)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ThemeState())
@@ -30,14 +30,14 @@ class MainViewModel(
     fun toggleTheme() {
         viewModelScope.launch {
             val current = themeState.value.isDarkMode
-            settingsManager.setDarkMode(!current)
+            settingsRepository.setDarkMode(!current)
         }
     }
 
     fun toggleContrast() {
         viewModelScope.launch {
             val current = themeState.value.isHighContrast
-            settingsManager.setHighContrast(!current)
+            settingsRepository.setHighContrast(!current)
         }
     }
 }

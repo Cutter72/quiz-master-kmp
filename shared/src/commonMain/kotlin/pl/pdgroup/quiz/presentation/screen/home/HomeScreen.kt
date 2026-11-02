@@ -63,12 +63,8 @@ import quizmaster.shared.generated.resources.toggle_theme
 
 @Composable
 fun HomeScreen(
-    isDarkMode: Boolean,
-    isHighContrast: Boolean,
-    onToggleTheme: () -> Unit,
-    onToggleContrast: () -> Unit,
-    onNavigateToSelection: () -> Unit,
-    onNavigateToScoreboard: () -> Unit
+    state: HomeContract.State,
+    onIntent: (HomeContract.Intent) -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
         Column(
@@ -79,10 +75,10 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             HomeHeaderControls(
-                isDarkMode = isDarkMode,
-                isHighContrast = isHighContrast,
-                onToggleTheme = onToggleTheme,
-                onToggleContrast = onToggleContrast
+                isDarkMode = state.isDarkMode,
+                isHighContrast = state.isHighContrast,
+                onToggleTheme = { onIntent(HomeContract.Intent.ToggleTheme) },
+                onToggleContrast = { onIntent(HomeContract.Intent.ToggleContrast) }
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -92,8 +88,8 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(48.dp))
 
             HomeActionCards(
-                onNavigateToSelection = onNavigateToSelection,
-                onNavigateToScoreboard = onNavigateToScoreboard
+                onNavigateToSelection = { onIntent(HomeContract.Intent.NavigateToSelection) },
+                onNavigateToScoreboard = { onIntent(HomeContract.Intent.NavigateToScoreboard) }
             )
 
             Spacer(modifier = Modifier.height(48.dp))

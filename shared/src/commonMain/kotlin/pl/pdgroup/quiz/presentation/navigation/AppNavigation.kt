@@ -16,19 +16,11 @@ import pl.pdgroup.quiz.presentation.screen.selection.SelectionRoute
 
 @Composable
 fun AppNavigation(
-    navController: NavHostController = rememberNavController(),
-    isDarkMode: Boolean,
-    isHighContrast: Boolean,
-    onToggleTheme: () -> Unit,
-    onToggleContrast: () -> Unit
+    navController: NavHostController = rememberNavController()
 ) {
     NavHost(navController = navController, startDestination = HomeRoute) {
         composable<HomeRoute> {
             HomeRoute(
-                isDarkMode = isDarkMode,
-                isHighContrast = isHighContrast,
-                onToggleTheme = onToggleTheme,
-                onToggleContrast = onToggleContrast,
                 onNavigateToSelection = { navController.navigate(SelectionRoute) },
                 onNavigateToScoreboard = { navController.navigate(ScoreboardRoute) }
             )

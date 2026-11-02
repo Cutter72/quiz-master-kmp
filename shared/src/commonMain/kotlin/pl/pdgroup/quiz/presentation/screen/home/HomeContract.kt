@@ -13,6 +13,8 @@ class HomeContract {
     ) : ViewState
 
     sealed class Intent : ViewIntent {
+        data object ToggleTheme : Intent()
+        data object ToggleContrast : Intent()
         data object NavigateToSelection : Intent()
         data object NavigateToScoreboard : Intent()
     }

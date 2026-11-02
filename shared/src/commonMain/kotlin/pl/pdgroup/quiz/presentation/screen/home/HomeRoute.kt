@@ -2,18 +2,18 @@ package pl.pdgroup.quiz.presentation.screen.home
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun HomeRoute(
-    isDarkMode: Boolean,
-    isHighContrast: Boolean,
-    onToggleTheme: () -> Unit,
-    onToggleContrast: () -> Unit,
     onNavigateToSelection: () -> Unit,
     onNavigateToScoreboard: () -> Unit,
     viewModel: HomeViewModel = koinViewModel()
 ) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
@@ -24,11 +24,7 @@ fun HomeRoute(
     }
 
     HomeScreen(
-        isDarkMode = isDarkMode,
-        isHighContrast = isHighContrast,
-        onToggleTheme = onToggleTheme,
-        onToggleContrast = onToggleContrast,
-        onNavigateToSelection = { viewModel.handleIntent(HomeContract.Intent.NavigateToSelection) },
-        onNavigateToScoreboard = { viewModel.handleIntent(HomeContract.Intent.NavigateToScoreboard) }
+        state = state,
+        onIntent = viewModel::handleIntent
     )
 }
