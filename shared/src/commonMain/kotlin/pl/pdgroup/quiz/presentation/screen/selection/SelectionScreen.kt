@@ -12,13 +12,13 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -38,6 +38,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -59,6 +60,8 @@ import org.jetbrains.compose.resources.stringResource
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.presentation.mapper.toStringRes
+import pl.pdgroup.quiz.ui.adaptive.AdaptiveContainer
+import pl.pdgroup.quiz.ui.adaptive.FormFactorPreviews
 import pl.pdgroup.quiz.ui.theme.QuizTheme
 import quizmaster.shared.generated.resources.Res
 import quizmaster.shared.generated.resources.back
@@ -94,51 +97,152 @@ fun SelectionScreenContent(
         )
     }
 
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        Column(
-            modifier = Modifier
-                .widthIn(max = 900.dp)
-                .fillMaxSize()
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            SelectionHeader(
-                onNavigateBack = { onIntent(SelectionContract.Intent.NavigateBack) }
-            )
+    val scrollState = rememberScrollState()
 
-            Spacer(modifier = Modifier.height(32.dp))
+    AdaptiveContainer(modifier = Modifier.fillMaxSize()) { layoutInfo ->
+        val categoryColumns = when {
+            layoutInfo.maxWidth < 360.dp -> 1
+            layoutInfo.isCompactWidth -> 2
+            else -> 3
+        }
+        val difficultyColumns = if (layoutInfo.maxWidth < 360.dp) 1 else 3
+        val sectionSpacing = if (layoutInfo.isCompactHeight) 16.dp else 28.dp
 
-            CategorySelection(
-                categories = state.categories,
-                selectedCategory = state.selectedCategory,
-                onCategorySelected = { onIntent(SelectionContract.Intent.SelectCategory(it)) }
-            )
+        if (layoutInfo.preferTwoPane) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 1120.dp)
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(
+                        horizontal = layoutInfo.horizontalContentPadding,
+                        vertical = layoutInfo.verticalContentPadding
+                    )
+            ) {
+                SelectionHeader(
+                    onNavigateBack = { onIntent(SelectionContract.Intent.NavigateBack) }
+                )
 
-            Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(sectionSpacing))
 
-            DifficultySelection(
-                difficulties = state.difficulties,
-                selectedDifficulty = state.selectedDifficulty,
-                onDifficultySelected = { onIntent(SelectionContract.Intent.SelectDifficulty(it)) }
-            )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1.35f),
+                        verticalArrangement = Arrangement.spacedBy(sectionSpacing)
+                    ) {
+                        CategorySelection(
+                            categories = state.categories,
+                            selectedCategory = state.selectedCategory,
+                            maxItemsInEachRow = categoryColumns,
+                            isCompact = layoutInfo.isCompactHeight,
+                            onCategorySelected = {
+                                onIntent(
+                                    SelectionContract.Intent.SelectCategory(
+                                        it
+                                    )
+                                )
+                            }
+                        )
+                    }
 
-            Spacer(modifier = Modifier.height(32.dp))
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        DifficultySelection(
+                            difficulties = state.difficulties,
+                            selectedDifficulty = state.selectedDifficulty,
+                            maxItemsInEachRow = difficultyColumns,
+                            isCompact = layoutInfo.isCompactHeight,
+                            onDifficultySelected = {
+                                onIntent(
+                                    SelectionContract.Intent.SelectDifficulty(
+                                        it
+                                    )
+                                )
+                            }
+                        )
 
-            SelectionInfoPanel(
-                selectedCategory = state.selectedCategory,
-                selectedDifficulty = state.selectedDifficulty,
-                availableQuestionsCount = state.availableQuestionsCount
-            )
+                        Spacer(modifier = Modifier.height(sectionSpacing))
 
-            Spacer(modifier = Modifier.height(32.dp))
+                        SelectionInfoPanel(
+                            selectedCategory = state.selectedCategory,
+                            selectedDifficulty = state.selectedDifficulty,
+                            availableQuestionsCount = state.availableQuestionsCount
+                        )
 
-            StartQuizButton(
-                isStartEnabled = state.isStartEnabled,
-                isLoading = state.isLoading,
-                onStartClick = { onIntent(SelectionContract.Intent.StartQuiz) }
-            )
+                        if (state.selectedCategory != null && state.selectedDifficulty != null) {
+                            Spacer(modifier = Modifier.height(sectionSpacing))
+                        }
 
-            Spacer(modifier = Modifier.height(32.dp))
+                        StartQuizButton(
+                            isStartEnabled = state.isStartEnabled,
+                            isLoading = state.isLoading,
+                            onStartClick = { onIntent(SelectionContract.Intent.StartQuiz) }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 840.dp)
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(
+                        horizontal = layoutInfo.horizontalContentPadding,
+                        vertical = layoutInfo.verticalContentPadding
+                    )
+            ) {
+                SelectionHeader(
+                    onNavigateBack = { onIntent(SelectionContract.Intent.NavigateBack) }
+                )
+
+                Spacer(modifier = Modifier.height(sectionSpacing))
+
+                CategorySelection(
+                    categories = state.categories,
+                    selectedCategory = state.selectedCategory,
+                    maxItemsInEachRow = categoryColumns,
+                    isCompact = layoutInfo.isCompactHeight,
+                    onCategorySelected = { onIntent(SelectionContract.Intent.SelectCategory(it)) }
+                )
+
+                Spacer(modifier = Modifier.height(sectionSpacing))
+
+                DifficultySelection(
+                    difficulties = state.difficulties,
+                    selectedDifficulty = state.selectedDifficulty,
+                    maxItemsInEachRow = difficultyColumns,
+                    isCompact = layoutInfo.isCompactHeight,
+                    onDifficultySelected = { onIntent(SelectionContract.Intent.SelectDifficulty(it)) }
+                )
+
+                Spacer(modifier = Modifier.height(sectionSpacing))
+
+                SelectionInfoPanel(
+                    selectedCategory = state.selectedCategory,
+                    selectedDifficulty = state.selectedDifficulty,
+                    availableQuestionsCount = state.availableQuestionsCount
+                )
+
+                if (state.selectedCategory != null && state.selectedDifficulty != null) {
+                    Spacer(modifier = Modifier.height(sectionSpacing))
+                }
+
+                StartQuizButton(
+                    isStartEnabled = state.isStartEnabled,
+                    isLoading = state.isLoading,
+                    onStartClick = { onIntent(SelectionContract.Intent.StartQuiz) }
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
         }
     }
 }
@@ -182,22 +286,24 @@ fun SelectionHeader(onNavigateBack: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CategorySelection(
     categories: List<QuizCategory>,
     selectedCategory: QuizCategory?,
+    maxItemsInEachRow: Int = 3,
+    isCompact: Boolean = false,
     onCategorySelected: (QuizCategory) -> Unit
 ) {
     SelectionCard(
         title = stringResource(Res.string.selection_category_title),
-        delayMs = 0
+        delayMs = 0,
+        isCompact = isCompact
     ) {
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            maxItemsInEachRow = 3
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            maxItemsInEachRow = maxItemsInEachRow
         ) {
             categories.forEachIndexed { index, category ->
                 val isSelected = selectedCategory == category
@@ -215,22 +321,24 @@ fun CategorySelection(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DifficultySelection(
     difficulties: List<Difficulty>,
     selectedDifficulty: Difficulty?,
+    maxItemsInEachRow: Int = 3,
+    isCompact: Boolean = false,
     onDifficultySelected: (Difficulty) -> Unit
 ) {
     SelectionCard(
         title = stringResource(Res.string.selection_difficulty_title),
-        delayMs = 200
+        delayMs = 200,
+        isCompact = isCompact
     ) {
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            maxItemsInEachRow = 3
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            maxItemsInEachRow = maxItemsInEachRow
         ) {
             difficulties.forEachIndexed { index, difficulty ->
                 val isSelected = selectedDifficulty == difficulty
@@ -346,6 +454,7 @@ fun StartQuizButton(
 fun SelectionCard(
     title: String,
     delayMs: Long,
+    isCompact: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val alphaAnim = remember { Animatable(0f) }
@@ -366,11 +475,11 @@ fun SelectionCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(32.dp)) {
+        Column(modifier = Modifier.padding(if (isCompact) 20.dp else 28.dp)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 24.dp)
+                modifier = Modifier.padding(bottom = if (isCompact) 16.dp else 20.dp)
             )
             content()
         }
@@ -401,7 +510,7 @@ fun SelectableChip(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .heightIn(min = 56.dp)
             .alpha(alphaAnim.value)
             .scale(scaleAnimEntry.value * scaleAnim.value)
             .background(
@@ -419,7 +528,8 @@ fun SelectableChip(
                     scaleAnim.animateTo(1f, spring(stiffness = Spring.StiffnessMedium))
                     onClick()
                 }
-            },
+            }
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -429,5 +539,22 @@ fun SelectableChip(
             fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
             textAlign = TextAlign.Center
         )
+    }
+}
+
+@FormFactorPreviews
+@Composable
+private fun SelectionScreenPreview() {
+    QuizTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            SelectionScreen(
+                state = SelectionContract.State(
+                    selectedCategory = QuizCategory.SCIENCE_AND_NATURE,
+                    selectedDifficulty = Difficulty.MEDIUM,
+                    availableQuestionsCount = 7
+                ),
+                onIntent = {}
+            )
+        }
     }
 }

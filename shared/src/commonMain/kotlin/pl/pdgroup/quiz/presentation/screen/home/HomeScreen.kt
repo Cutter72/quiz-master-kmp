@@ -19,8 +19,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Leaderboard
@@ -32,6 +34,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,6 +53,9 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import pl.pdgroup.quiz.ui.adaptive.AdaptiveContainer
+import pl.pdgroup.quiz.ui.adaptive.FormFactorPreviews
+import pl.pdgroup.quiz.ui.theme.QuizTheme
 import quizmaster.shared.generated.resources.Res
 import quizmaster.shared.generated.resources.home_footer_info
 import quizmaster.shared.generated.resources.home_hero_subtitle
@@ -66,35 +72,96 @@ fun HomeScreen(
     state: HomeContract.State,
     onIntent: (HomeContract.Intent) -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        Column(
-            modifier = Modifier
-                .widthIn(max = 600.dp)
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            HomeHeaderControls(
-                isDarkMode = state.isDarkMode,
-                isHighContrast = state.isHighContrast,
-                onToggleTheme = { onIntent(HomeContract.Intent.ToggleTheme) },
-                onToggleContrast = { onIntent(HomeContract.Intent.ToggleContrast) }
-            )
+    val scrollState = rememberScrollState()
 
-            Spacer(modifier = Modifier.height(32.dp))
+    AdaptiveContainer(modifier = Modifier.fillMaxSize()) { layoutInfo ->
+        if (layoutInfo.isWideLayout) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 1040.dp)
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(
+                        horizontal = layoutInfo.horizontalContentPadding,
+                        vertical = layoutInfo.verticalContentPadding
+                    ),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                HomeHeaderControls(
+                    isDarkMode = state.isDarkMode,
+                    isHighContrast = state.isHighContrast,
+                    onToggleTheme = { onIntent(HomeContract.Intent.ToggleTheme) },
+                    onToggleContrast = { onIntent(HomeContract.Intent.ToggleContrast) }
+                )
 
-            HomeHeroSection()
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = if (layoutInfo.isCompactHeight) 12.dp else 32.dp),
+                    horizontalArrangement = Arrangement.spacedBy(32.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        HomeHeroSection(isCompactHeight = layoutInfo.isCompactHeight)
+                        Spacer(modifier = Modifier.height(if (layoutInfo.isCompactHeight) 16.dp else 24.dp))
+                        HomeFooterInfo()
+                    }
 
-            Spacer(modifier = Modifier.height(48.dp))
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        HomeActionCards(
+                            isCompactHeight = layoutInfo.isCompactHeight,
+                            onNavigateToSelection = { onIntent(HomeContract.Intent.NavigateToSelection) },
+                            onNavigateToScoreboard = { onIntent(HomeContract.Intent.NavigateToScoreboard) }
+                        )
+                    }
+                }
 
-            HomeActionCards(
-                onNavigateToSelection = { onIntent(HomeContract.Intent.NavigateToSelection) },
-                onNavigateToScoreboard = { onIntent(HomeContract.Intent.NavigateToScoreboard) }
-            )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        } else {
+            val sectionSpacing = if (layoutInfo.isCompactHeight) 20.dp else 36.dp
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 600.dp)
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(
+                        horizontal = layoutInfo.horizontalContentPadding,
+                        vertical = layoutInfo.verticalContentPadding
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                HomeHeaderControls(
+                    isDarkMode = state.isDarkMode,
+                    isHighContrast = state.isHighContrast,
+                    onToggleTheme = { onIntent(HomeContract.Intent.ToggleTheme) },
+                    onToggleContrast = { onIntent(HomeContract.Intent.ToggleContrast) }
+                )
 
-            Spacer(modifier = Modifier.height(48.dp))
+                Spacer(modifier = Modifier.height(if (layoutInfo.isCompactHeight) 12.dp else 24.dp))
 
-            HomeFooterInfo()
+                HomeHeroSection(isCompactHeight = layoutInfo.isCompactHeight)
+
+                Spacer(modifier = Modifier.height(sectionSpacing))
+
+                HomeActionCards(
+                    isCompactHeight = layoutInfo.isCompactHeight,
+                    onNavigateToSelection = { onIntent(HomeContract.Intent.NavigateToSelection) },
+                    onNavigateToScoreboard = { onIntent(HomeContract.Intent.NavigateToScoreboard) }
+                )
+
+                Spacer(modifier = Modifier.height(sectionSpacing))
+
+                HomeFooterInfo()
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
     }
 }
@@ -131,7 +198,7 @@ fun HomeHeaderControls(
 }
 
 @Composable
-fun HomeHeroSection() {
+fun HomeHeroSection(isCompactHeight: Boolean = false) {
     val wiggleAnim = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
         while (true) {
@@ -148,15 +215,15 @@ fun HomeHeroSection() {
         contentDescription = stringResource(Res.string.home_hero_title),
         tint = MaterialTheme.colorScheme.primary,
         modifier = Modifier
-            .size(120.dp)
+            .size(if (isCompactHeight) 80.dp else 120.dp)
             .rotate(wiggleAnim.value)
     )
 
-    Spacer(modifier = Modifier.height(16.dp))
+    Spacer(modifier = Modifier.height(if (isCompactHeight) 12.dp else 16.dp))
 
     Text(
         text = stringResource(Res.string.home_hero_title),
-        style = MaterialTheme.typography.displayMedium,
+        style = if (isCompactHeight) MaterialTheme.typography.headlineLarge else MaterialTheme.typography.displayMedium,
         textAlign = TextAlign.Center
     )
 
@@ -164,7 +231,7 @@ fun HomeHeroSection() {
 
     Text(
         text = stringResource(Res.string.home_hero_subtitle),
-        style = MaterialTheme.typography.headlineSmall,
+        style = if (isCompactHeight) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center
     )
@@ -172,6 +239,7 @@ fun HomeHeroSection() {
 
 @Composable
 fun HomeActionCards(
+    isCompactHeight: Boolean = false,
     onNavigateToSelection: () -> Unit,
     onNavigateToScoreboard: () -> Unit
 ) {
@@ -181,10 +249,11 @@ fun HomeActionCards(
         icon = Icons.AutoMirrored.Filled.List,
         iconBgColor = MaterialTheme.colorScheme.primary,
         delayMs = 150,
+        isCompact = isCompactHeight,
         onClick = onNavigateToSelection
     )
 
-    Spacer(modifier = Modifier.height(24.dp))
+    Spacer(modifier = Modifier.height(if (isCompactHeight) 16.dp else 24.dp))
 
     ActionCard(
         title = stringResource(Res.string.home_scoreboard_title),
@@ -192,6 +261,7 @@ fun HomeActionCards(
         icon = Icons.Default.Leaderboard,
         iconBgColor = MaterialTheme.colorScheme.secondary,
         delayMs = 300,
+        isCompact = isCompactHeight,
         onClick = onNavigateToScoreboard
     )
 }
@@ -220,6 +290,7 @@ fun ActionCard(
     icon: ImageVector,
     iconBgColor: Color,
     delayMs: Long,
+    isCompact: Boolean = false,
     onClick: () -> Unit
 ) {
     val alphaAnim = remember { Animatable(0f) }
@@ -253,12 +324,12 @@ fun ActionCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
-            modifier = Modifier.padding(32.dp),
+            modifier = Modifier.padding(if (isCompact) 20.dp else 32.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(60.dp)
+                    .size(if (isCompact) 48.dp else 60.dp)
                     .clip(CircleShape)
                     .background(iconBgColor),
                 contentAlignment = Alignment.Center
@@ -267,16 +338,16 @@ fun ActionCard(
                     imageVector = icon,
                     contentDescription = null,
                     tint = Color.White,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(if (isCompact) 28.dp else 36.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.width(24.dp))
+            Spacer(modifier = Modifier.width(if (isCompact) 16.dp else 24.dp))
 
             Column {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.headlineMedium
+                    style = if (isCompact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
@@ -285,6 +356,19 @@ fun ActionCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+    }
+}
+
+@FormFactorPreviews
+@Composable
+private fun HomeScreenPreview() {
+    QuizTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            HomeScreen(
+                state = HomeContract.State(isDarkMode = false, isHighContrast = false),
+                onIntent = {}
+            )
         }
     }
 }

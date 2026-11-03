@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,10 +22,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
@@ -38,6 +44,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,6 +55,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -58,6 +67,8 @@ import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.presentation.mapper.toStringRes
 import pl.pdgroup.quiz.presentation.model.ScoreUiModel
+import pl.pdgroup.quiz.ui.adaptive.AdaptiveContainer
+import pl.pdgroup.quiz.ui.adaptive.FormFactorPreviews
 import pl.pdgroup.quiz.ui.theme.QuizTheme
 import quizmaster.shared.generated.resources.Res
 import quizmaster.shared.generated.resources.back
@@ -86,46 +97,111 @@ fun ScoreboardScreenContent(
     state: ScoreboardContract.State,
     onIntent: (ScoreboardContract.Intent) -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+    val gridState = rememberLazyGridState()
+    val sidebarScrollState = rememberScrollState()
+
+    AdaptiveContainer(modifier = Modifier.fillMaxSize()) { layoutInfo ->
+        val useStatsSidebar =
+            (layoutInfo.isExpandedWidth || (layoutInfo.isCompactHeight && layoutInfo.isWideLayout)) &&
+                    state.allScores.isNotEmpty()
+
         Column(
             modifier = Modifier
-                .widthIn(max = 900.dp)
+                .widthIn(max = 1200.dp)
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(
+                    horizontal = layoutInfo.horizontalContentPadding,
+                    vertical = layoutInfo.verticalContentPadding
+                )
         ) {
             ScoreboardHeader(
+                isCompact = layoutInfo.isCompactHeight,
                 onNavigateBack = { onIntent(ScoreboardContract.Intent.NavigateBack) }
             )
 
             if (state.isLoading) {
                 ScoreboardLoadingState()
+            } else if (useStatsSidebar) {
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    ScoreboardStatsSidebar(
+                        totalQuizzes = state.totalQuizzes,
+                        averageScore = state.averageScore,
+                        bestScore = state.bestScore,
+                        modifier = Modifier
+                            .width(230.dp)
+                            .fillMaxHeight()
+                            .verticalScroll(sidebarScrollState)
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                    ) {
+                        ScoreboardCategoryTabs(
+                            categories = state.categories,
+                            selectedCategory = state.selectedCategory,
+                            isCompact = layoutInfo.isCompactHeight,
+                            onCategorySelected = {
+                                onIntent(
+                                    ScoreboardContract.Intent.SelectCategory(
+                                        it
+                                    )
+                                )
+                            }
+                        )
+
+                        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                            ScoreboardContent(
+                                state = state,
+                                gridState = gridState
+                            )
+                        }
+                    }
+                }
             } else {
                 if (state.allScores.isNotEmpty()) {
                     ScoreboardStatsOverview(
                         totalQuizzes = state.totalQuizzes,
                         averageScore = state.averageScore,
-                        bestScore = state.bestScore
+                        bestScore = state.bestScore,
+                        isCompact = layoutInfo.isCompactHeight || layoutInfo.maxWidth < 380.dp
                     )
                 }
 
                 ScoreboardCategoryTabs(
                     categories = state.categories,
                     selectedCategory = state.selectedCategory,
+                    isCompact = layoutInfo.isCompactHeight,
                     onCategorySelected = { onIntent(ScoreboardContract.Intent.SelectCategory(it)) }
                 )
 
-                ScoreboardContent(state = state)
+                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    ScoreboardContent(
+                        state = state,
+                        gridState = gridState
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun ScoreboardHeader(onNavigateBack: () -> Unit) {
+fun ScoreboardHeader(
+    isCompact: Boolean = false,
+    onNavigateBack: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 32.dp),
+            .padding(bottom = if (isCompact) 12.dp else 24.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onNavigateBack) {
@@ -162,7 +238,8 @@ fun ScoreboardLoadingState() {
 fun ScoreboardStatsOverview(
     totalQuizzes: Int,
     averageScore: Double,
-    bestScore: Int
+    bestScore: Int,
+    isCompact: Boolean = false
 ) {
     val statsAlpha = remember { Animatable(0f) }
     val statsOffsetY = remember { Animatable(-20f) }
@@ -179,23 +256,60 @@ fun ScoreboardStatsOverview(
             .fillMaxWidth()
             .alpha(statsAlpha.value)
             .offset(y = statsOffsetY.value.dp)
-            .padding(bottom = 32.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(bottom = if (isCompact) 16.dp else 24.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (isCompact) 8.dp else 16.dp)
     ) {
         StatCard(
             modifier = Modifier.weight(1f),
             value = "$totalQuizzes",
             label = stringResource(Res.string.scoreboard_stat_quizzes),
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.primary,
+            isCompact = isCompact
         )
         StatCard(
             modifier = Modifier.weight(1f),
             value = stringResource(Res.string.scoreboard_percentage_fmt, avgStr),
             label = stringResource(Res.string.scoreboard_stat_average),
-            color = QuizTheme.extendedColors.success
+            color = QuizTheme.extendedColors.success,
+            isCompact = isCompact
         )
         StatCard(
             modifier = Modifier.weight(1f),
+            value = stringResource(Res.string.scoreboard_percentage_fmt, bestScore.toString()),
+            label = stringResource(Res.string.scoreboard_stat_best),
+            color = MaterialTheme.colorScheme.secondary,
+            isCompact = isCompact
+        )
+    }
+}
+
+@Composable
+private fun ScoreboardStatsSidebar(
+    totalQuizzes: Int,
+    averageScore: Double,
+    bestScore: Int,
+    modifier: Modifier = Modifier
+) {
+    val avgStr = ((averageScore * 10).toInt() / 10.0).toString()
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        StatCard(
+            modifier = Modifier.fillMaxWidth(),
+            value = "$totalQuizzes",
+            label = stringResource(Res.string.scoreboard_stat_quizzes),
+            color = MaterialTheme.colorScheme.primary
+        )
+        StatCard(
+            modifier = Modifier.fillMaxWidth(),
+            value = stringResource(Res.string.scoreboard_percentage_fmt, avgStr),
+            label = stringResource(Res.string.scoreboard_stat_average),
+            color = QuizTheme.extendedColors.success
+        )
+        StatCard(
+            modifier = Modifier.fillMaxWidth(),
             value = stringResource(Res.string.scoreboard_percentage_fmt, bestScore.toString()),
             label = stringResource(Res.string.scoreboard_stat_best),
             color = MaterialTheme.colorScheme.secondary
@@ -204,7 +318,13 @@ fun ScoreboardStatsOverview(
 }
 
 @Composable
-fun StatCard(modifier: Modifier = Modifier, value: String, label: String, color: Color) {
+fun StatCard(
+    modifier: Modifier = Modifier,
+    value: String,
+    label: String,
+    color: Color,
+    isCompact: Boolean = false
+) {
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
@@ -214,20 +334,22 @@ fun StatCard(modifier: Modifier = Modifier, value: String, label: String, color:
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(if (isCompact) 12.dp else 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = value,
-                style = MaterialTheme.typography.headlineMedium,
+                style = if (isCompact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
                 color = color,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = label,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = if (isCompact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
             )
         }
     }
@@ -237,6 +359,7 @@ fun StatCard(modifier: Modifier = Modifier, value: String, label: String, color:
 fun ScoreboardCategoryTabs(
     categories: List<QuizCategory?>,
     selectedCategory: QuizCategory?,
+    isCompact: Boolean = false,
     onCategorySelected: (QuizCategory?) -> Unit
 ) {
     val tabsAlpha = remember { Animatable(0f) }
@@ -249,13 +372,13 @@ fun ScoreboardCategoryTabs(
         modifier = Modifier
             .fillMaxWidth()
             .alpha(tabsAlpha.value)
-            .padding(bottom = 24.dp),
+            .padding(bottom = if (isCompact) 12.dp else 20.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         ScrollableTabRow(
             selectedTabIndex = categories.indexOf(selectedCategory).coerceAtLeast(0),
-            modifier = Modifier.padding(8.dp),
+            modifier = Modifier.padding(6.dp),
             containerColor = Color.Transparent,
             edgePadding = 8.dp,
             divider = {}
@@ -266,13 +389,14 @@ fun ScoreboardCategoryTabs(
                     selected = isSelected,
                     onClick = { onCategorySelected(category) },
                     modifier = Modifier
-                        .height(48.dp)
+                        .height(if (isCompact) 40.dp else 48.dp)
                         .padding(horizontal = 4.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(
                             if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                             else Color.Transparent
                         )
+                        .pointerHoverIcon(PointerIcon.Hand)
                 ) {
                     Text(
                         text = stringResource(category.toStringRes()),
@@ -287,7 +411,10 @@ fun ScoreboardCategoryTabs(
 }
 
 @Composable
-fun ScoreboardContent(state: ScoreboardContract.State) {
+fun ScoreboardContent(
+    state: ScoreboardContract.State,
+    gridState: LazyGridState = rememberLazyGridState()
+) {
     AnimatedContent(
         targetState = state.filteredScores.isEmpty(),
         transitionSpec = { fadeIn(tween(500)).togetherWith(fadeOut(tween(500))) }
@@ -295,13 +422,19 @@ fun ScoreboardContent(state: ScoreboardContract.State) {
         if (isEmpty) {
             EmptyState()
         } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 320.dp),
+                state = gridState,
+                modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(bottom = 32.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(bottom = 24.dp)
             ) {
-                itemsIndexed(state.filteredScores) { index, score ->
-                    ScoreCard(score = score, delayMs = index * 20L)
+                itemsIndexed(
+                    items = state.filteredScores,
+                    key = { _, score -> score.id }
+                ) { index, score ->
+                    ScoreCard(score = score, delayMs = (index % 12) * 20L)
                 }
             }
         }
@@ -318,7 +451,7 @@ fun EmptyState() {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(64.dp),
+                .padding(48.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
@@ -459,6 +592,55 @@ fun ScoreCard(score: ScoreUiModel, delayMs: Long) {
                 style = MaterialTheme.typography.headlineLarge,
                 color = scoreColor,
                 fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
+
+@FormFactorPreviews
+@Composable
+private fun ScoreboardScreenPreview() {
+    val sampleScores = listOf(
+        ScoreUiModel(
+            id = 1,
+            category = QuizCategory.SCIENCE_AND_NATURE,
+            difficulty = Difficulty.HARD,
+            score = 7,
+            totalQuestions = 7,
+            percentage = 100,
+            formattedDate = "2026-11-03"
+        ),
+        ScoreUiModel(
+            id = 2,
+            category = QuizCategory.HISTORY,
+            difficulty = Difficulty.MEDIUM,
+            score = 5,
+            totalQuestions = 7,
+            percentage = 71,
+            formattedDate = "2026-11-02"
+        ),
+        ScoreUiModel(
+            id = 3,
+            category = QuizCategory.GEOGRAPHY,
+            difficulty = Difficulty.EASY,
+            score = 6,
+            totalQuestions = 7,
+            percentage = 85,
+            formattedDate = "2026-11-01"
+        )
+    )
+    QuizTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            ScoreboardScreen(
+                state = ScoreboardContract.State(
+                    allScores = sampleScores,
+                    filteredScores = sampleScores,
+                    totalQuizzes = 3,
+                    averageScore = 85.3,
+                    bestScore = 100,
+                    isLoading = false
+                ),
+                onIntent = {}
             )
         }
     }

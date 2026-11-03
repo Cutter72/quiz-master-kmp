@@ -42,6 +42,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -65,6 +66,8 @@ import org.jetbrains.compose.resources.stringResource
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.presentation.mapper.toStringRes
+import pl.pdgroup.quiz.ui.adaptive.AdaptiveContainer
+import pl.pdgroup.quiz.ui.adaptive.FormFactorPreviews
 import pl.pdgroup.quiz.ui.theme.QuizTheme
 import pl.pdgroup.quiz.util.UiText
 import quizmaster.shared.generated.resources.Res
@@ -114,46 +117,124 @@ fun ResultScreenContent(
         else -> stringResource(Res.string.result_keep_practicing)
     }
 
-    if (state.percentage == 100) {
-        ConfettiEffect()
-    }
+    val scrollState = rememberScrollState()
 
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(
-            modifier = Modifier
-                .widthIn(max = 600.dp)
-                .fillMaxSize()
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            ResultTrophy(themeColor = themeColor)
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (state.percentage == 100) {
+            ConfettiEffect()
+        }
 
-            ResultDetailsCard(
-                message = message,
-                score = state.score,
-                totalQuestions = state.totalQuestions,
-                percentage = state.percentage,
-                themeColor = themeColor,
-                category = state.category,
-                difficulty = state.difficulty
-            )
+        AdaptiveContainer(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) { layoutInfo ->
+            val useTwoColumn = layoutInfo.preferTwoPane ||
+                    (layoutInfo.isCompactHeight && layoutInfo.isWideLayout)
 
-            state.saveError?.let { error ->
-                ResultSaveErrorBanner(
-                    error = error,
-                    onRetry = { onIntent(ResultContract.Intent.RetrySaveScore) }
-                )
+            if (useTwoColumn) {
+                Row(
+                    modifier = Modifier
+                        .widthIn(max = 1040.dp)
+                        .fillMaxWidth()
+                        .verticalScroll(scrollState)
+                        .padding(
+                            horizontal = layoutInfo.horizontalContentPadding,
+                            vertical = layoutInfo.verticalContentPadding
+                        ),
+                    horizontalArrangement = Arrangement.spacedBy(32.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1.2f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        ResultTrophy(
+                            themeColor = themeColor,
+                            isCompact = layoutInfo.isCompactHeight
+                        )
+                        ResultDetailsCard(
+                            message = message,
+                            score = state.score,
+                            totalQuestions = state.totalQuestions,
+                            percentage = state.percentage,
+                            themeColor = themeColor,
+                            category = state.category,
+                            difficulty = state.difficulty,
+                            isCompact = layoutInfo.isCompactHeight,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    Column(
+                        modifier = Modifier.weight(0.95f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        state.saveError?.let { error ->
+                            ResultSaveErrorBanner(
+                                error = error,
+                                onRetry = { onIntent(ResultContract.Intent.RetrySaveScore) }
+                            )
+                        }
+
+                        ResultActionButtons(
+                            sideBySideSecondary = false,
+                            isCompact = layoutInfo.isCompactHeight,
+                            onTryAnother = { onIntent(ResultContract.Intent.TryAnotherQuiz) },
+                            onViewScoreboard = { onIntent(ResultContract.Intent.ViewScoreboard) },
+                            onBackToHome = { onIntent(ResultContract.Intent.BackToHome) }
+                        )
+                    }
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .widthIn(max = 680.dp)
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .padding(
+                            horizontal = layoutInfo.horizontalContentPadding,
+                            vertical = layoutInfo.verticalContentPadding
+                        ),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    ResultTrophy(
+                        themeColor = themeColor,
+                        isCompact = layoutInfo.isCompactHeight
+                    )
+
+                    ResultDetailsCard(
+                        message = message,
+                        score = state.score,
+                        totalQuestions = state.totalQuestions,
+                        percentage = state.percentage,
+                        themeColor = themeColor,
+                        category = state.category,
+                        difficulty = state.difficulty,
+                        isCompact = layoutInfo.isCompactHeight,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = if (layoutInfo.isCompactHeight) 20.dp else 32.dp)
+                    )
+
+                    state.saveError?.let { error ->
+                        ResultSaveErrorBanner(
+                            error = error,
+                            onRetry = { onIntent(ResultContract.Intent.RetrySaveScore) }
+                        )
+                    }
+
+                    ResultActionButtons(
+                        sideBySideSecondary = layoutInfo.isMediumWidth,
+                        isCompact = layoutInfo.isCompactHeight,
+                        onTryAnother = { onIntent(ResultContract.Intent.TryAnotherQuiz) },
+                        onViewScoreboard = { onIntent(ResultContract.Intent.ViewScoreboard) },
+                        onBackToHome = { onIntent(ResultContract.Intent.BackToHome) }
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
             }
-
-            ResultActionButtons(
-                onTryAnother = { onIntent(ResultContract.Intent.TryAnotherQuiz) },
-                onViewScoreboard = { onIntent(ResultContract.Intent.ViewScoreboard) },
-                onBackToHome = { onIntent(ResultContract.Intent.BackToHome) }
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
@@ -196,7 +277,10 @@ fun ResultSaveErrorBanner(
 }
 
 @Composable
-fun ResultTrophy(themeColor: Color) {
+fun ResultTrophy(
+    themeColor: Color,
+    isCompact: Boolean = false
+) {
     val scaleAnim = remember { Animatable(0f) }
     val rotateAnim = remember { Animatable(0f) }
     val pulseScaleAnim = remember { Animatable(1f) }
@@ -221,10 +305,10 @@ fun ResultTrophy(themeColor: Color) {
         contentDescription = null,
         tint = themeColor,
         modifier = Modifier
-            .size(120.dp)
+            .size(if (isCompact) 88.dp else 120.dp)
             .scale(scaleAnim.value * pulseScaleAnim.value)
             .rotate(rotateAnim.value)
-            .padding(bottom = 32.dp)
+            .padding(bottom = if (isCompact) 16.dp else 32.dp)
     )
 }
 
@@ -236,7 +320,9 @@ fun ResultDetailsCard(
     percentage: Int,
     themeColor: Color,
     category: QuizCategory,
-    difficulty: Difficulty
+    difficulty: Difficulty,
+    modifier: Modifier = Modifier,
+    isCompact: Boolean = false
 ) {
     val cardAlphaAnim = remember { Animatable(0f) }
     val cardOffsetYAnim = remember { Animatable(20f) }
@@ -248,40 +334,38 @@ fun ResultDetailsCard(
     }
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
             .alpha(cardAlphaAnim.value)
-            .offset(y = cardOffsetYAnim.value.dp)
-            .padding(bottom = 32.dp),
+            .offset(y = cardOffsetYAnim.value.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(32.dp),
+            modifier = Modifier.padding(if (isCompact) 20.dp else 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = message,
-                style = MaterialTheme.typography.headlineLarge,
+                style = if (isCompact) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.headlineLarge,
                 color = themeColor,
-                modifier = Modifier.padding(bottom = 32.dp),
+                modifier = Modifier.padding(bottom = if (isCompact) 16.dp else 28.dp),
                 textAlign = TextAlign.Center
             )
 
             Text(
                 text = stringResource(Res.string.result_score_fraction, score, totalQuestions),
-                style = MaterialTheme.typography.displayLarge,
+                style = if (isCompact) MaterialTheme.typography.displayMedium else MaterialTheme.typography.displayLarge,
                 color = themeColor,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 12.dp)
             )
 
             Text(
                 text = stringResource(Res.string.result_pct_correct, percentage),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 32.dp)
+                modifier = Modifier.padding(bottom = if (isCompact) 16.dp else 28.dp)
             )
 
             ResultProgressBar(percentage = percentage, themeColor = themeColor)
@@ -302,8 +386,8 @@ fun ResultProgressBar(percentage: Int, themeColor: Color) {
         progress = { animatedProgress },
         modifier = Modifier
             .fillMaxWidth()
+            .padding(bottom = 20.dp)
             .height(12.dp)
-            .padding(bottom = 24.dp)
             .clip(RoundedCornerShape(6.dp)),
         color = themeColor,
         trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
@@ -346,40 +430,75 @@ fun ResultInfoPanel(category: QuizCategory, difficulty: Difficulty) {
 
 @Composable
 fun ResultActionButtons(
+    sideBySideSecondary: Boolean = false,
+    isCompact: Boolean = false,
     onTryAnother: () -> Unit,
     onViewScoreboard: () -> Unit,
     onBackToHome: () -> Unit
 ) {
+    val buttonGap = if (isCompact) 12.dp else 16.dp
+
     AnimatedButton(
         text = stringResource(Res.string.result_btn_try_another),
         icon = Icons.Default.Refresh,
         delayMs = 400,
         isOutlined = false,
         isText = false,
+        isCompact = isCompact,
         onClick = onTryAnother
     )
 
-    Spacer(modifier = Modifier.height(16.dp))
+    Spacer(modifier = Modifier.height(buttonGap))
 
-    AnimatedButton(
-        text = stringResource(Res.string.result_btn_view_scoreboard),
-        icon = Icons.Default.Leaderboard,
-        delayMs = 500,
-        isOutlined = true,
-        isText = false,
-        onClick = onViewScoreboard
-    )
+    if (sideBySideSecondary) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            AnimatedButton(
+                text = stringResource(Res.string.result_btn_view_scoreboard),
+                icon = Icons.Default.Leaderboard,
+                delayMs = 500,
+                isOutlined = true,
+                isText = false,
+                isCompact = isCompact,
+                modifier = Modifier.weight(1f),
+                onClick = onViewScoreboard
+            )
+            AnimatedButton(
+                text = stringResource(Res.string.result_btn_back_to_home),
+                icon = Icons.Default.Home,
+                delayMs = 600,
+                isOutlined = false,
+                isText = true,
+                isCompact = isCompact,
+                modifier = Modifier.weight(1f),
+                onClick = onBackToHome
+            )
+        }
+    } else {
+        AnimatedButton(
+            text = stringResource(Res.string.result_btn_view_scoreboard),
+            icon = Icons.Default.Leaderboard,
+            delayMs = 500,
+            isOutlined = true,
+            isText = false,
+            isCompact = isCompact,
+            onClick = onViewScoreboard
+        )
 
-    Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(buttonGap))
 
-    AnimatedButton(
-        text = stringResource(Res.string.result_btn_back_to_home),
-        icon = Icons.Default.Home,
-        delayMs = 600,
-        isOutlined = false,
-        isText = true,
-        onClick = onBackToHome
-    )
+        AnimatedButton(
+            text = stringResource(Res.string.result_btn_back_to_home),
+            icon = Icons.Default.Home,
+            delayMs = 600,
+            isOutlined = false,
+            isText = true,
+            isCompact = isCompact,
+            onClick = onBackToHome
+        )
+    }
 }
 
 @Composable
@@ -389,7 +508,9 @@ fun AnimatedButton(
     delayMs: Long,
     isOutlined: Boolean,
     isText: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isCompact: Boolean = false
 ) {
     val alphaAnim = remember { Animatable(0f) }
     val offsetYAnim = remember { Animatable(20f) }
@@ -400,26 +521,33 @@ fun AnimatedButton(
         launch { offsetYAnim.animateTo(0f, tween(500)) }
     }
 
-    val modifier = Modifier
-        .fillMaxWidth()
-        .height(64.dp)
+    val buttonModifier = (if (modifier == Modifier) Modifier.fillMaxWidth() else modifier)
+        .height(if (isCompact) 56.dp else 64.dp)
         .alpha(alphaAnim.value)
         .offset(y = offsetYAnim.value.dp)
 
     if (isText) {
-        TextButton(onClick = onClick, modifier = modifier, shape = RoundedCornerShape(20.dp)) {
+        TextButton(
+            onClick = onClick,
+            modifier = buttonModifier,
+            shape = RoundedCornerShape(20.dp)
+        ) {
             Icon(imageVector = icon, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
             Text(text = text, fontSize = 18.sp, fontWeight = FontWeight.Medium)
         }
     } else if (isOutlined) {
-        OutlinedButton(onClick = onClick, modifier = modifier, shape = RoundedCornerShape(20.dp)) {
+        OutlinedButton(
+            onClick = onClick,
+            modifier = buttonModifier,
+            shape = RoundedCornerShape(20.dp)
+        ) {
             Icon(imageVector = icon, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
             Text(text = text, fontSize = 18.sp, fontWeight = FontWeight.Medium)
         }
     } else {
-        Button(onClick = onClick, modifier = modifier, shape = RoundedCornerShape(20.dp)) {
+        Button(onClick = onClick, modifier = buttonModifier, shape = RoundedCornerShape(20.dp)) {
             Icon(imageVector = icon, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
             Text(text = text, fontSize = 18.sp, fontWeight = FontWeight.Medium)
@@ -488,3 +616,23 @@ data class ConfettiParticle(
         Color(0xFFFFD54F)
     ).random()
 )
+
+@FormFactorPreviews
+@Composable
+private fun ResultScreenPreview() {
+    QuizTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            ResultScreen(
+                state = ResultContract.State(
+                    category = QuizCategory.SCIENCE_AND_NATURE,
+                    difficulty = Difficulty.MEDIUM,
+                    score = 6,
+                    totalQuestions = 7,
+                    percentage = 85,
+                    isSaved = true
+                ),
+                onIntent = {}
+            )
+        }
+    }
+}
