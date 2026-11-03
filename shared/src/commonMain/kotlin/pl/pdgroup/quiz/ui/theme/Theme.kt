@@ -20,7 +20,7 @@ data class ExtendedColors(
 val LocalExtendedColors = staticCompositionLocalOf {
     ExtendedColors(
         success = SuccessLight,
-        onSuccess = SurfaceLight
+        onSuccess = OnSuccessLight
     )
 }
 
@@ -33,30 +33,78 @@ object QuizTheme {
 
 private val DarkColorScheme = darkColorScheme(
     primary = OrangePrimaryDark,
-    onPrimary = SurfaceLight,
-    primaryContainer = OrangePrimaryDarkVariantDark,
+    onPrimary = OnOrangePrimaryDark,
+    primaryContainer = OrangePrimaryContainerDark,
+    onPrimaryContainer = OnOrangePrimaryContainerDark,
     secondary = OrangeSecondaryDark,
-    secondaryContainer = YellowSecondaryLightVariantDark,
+    onSecondary = OnOrangeSecondaryDark,
+    secondaryContainer = YellowSecondaryContainerDark,
+    onSecondaryContainer = OnYellowSecondaryContainerDark,
     background = BackgroundDark,
-    surface = SurfaceDark,
     onBackground = TextPrimaryDark,
+    surface = SurfaceDark,
     onSurface = TextPrimaryDark,
+    surfaceVariant = SurfaceVariantDark,
     onSurfaceVariant = TextSecondaryDark,
-    error = ErrorDark
+    error = ErrorDark,
+    onError = OnErrorDark,
+    outline = OutlineDark,
+    outlineVariant = OutlineVariantDark
+)
+
+private val HighContrastDarkColorScheme = DarkColorScheme.copy(
+    primary = HighContrastPrimaryDark,
+    onPrimary = HighContrastOnPrimaryDark,
+    secondary = HighContrastSecondaryDark,
+    onSecondary = HighContrastOnSecondaryDark,
+    background = HighContrastBackgroundDark,
+    onBackground = HighContrastTextPrimaryDark,
+    surface = HighContrastSurfaceDark,
+    onSurface = HighContrastTextPrimaryDark,
+    surfaceVariant = HighContrastSurfaceVariantDark,
+    onSurfaceVariant = HighContrastTextSecondaryDark,
+    error = HighContrastErrorDark,
+    onError = HighContrastOnErrorDark,
+    outline = HighContrastOutlineDark,
+    outlineVariant = HighContrastOutlineDark
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = OrangePrimaryLight,
-    onPrimary = SurfaceLight,
-    primaryContainer = OrangePrimaryDarkVariant,
+    onPrimary = OnOrangePrimaryLight,
+    primaryContainer = OrangePrimaryContainerLight,
+    onPrimaryContainer = OnOrangePrimaryContainerLight,
     secondary = OrangeSecondaryLight,
-    secondaryContainer = YellowSecondaryLightVariant,
+    onSecondary = OnOrangeSecondaryLight,
+    secondaryContainer = YellowSecondaryContainerLight,
+    onSecondaryContainer = OnYellowSecondaryContainerLight,
     background = BackgroundLight,
-    surface = SurfaceLight,
     onBackground = TextPrimaryLight,
+    surface = SurfaceLight,
     onSurface = TextPrimaryLight,
+    surfaceVariant = SurfaceVariantLight,
     onSurfaceVariant = TextSecondaryLight,
-    error = ErrorLight
+    error = ErrorLight,
+    onError = OnErrorLight,
+    outline = OutlineLight,
+    outlineVariant = OutlineVariantLight
+)
+
+private val HighContrastLightColorScheme = LightColorScheme.copy(
+    primary = HighContrastPrimaryLight,
+    onPrimary = HighContrastOnPrimaryLight,
+    secondary = HighContrastSecondaryLight,
+    onSecondary = HighContrastOnSecondaryLight,
+    background = HighContrastBackgroundLight,
+    onBackground = HighContrastTextPrimaryLight,
+    surface = HighContrastSurfaceLight,
+    onSurface = HighContrastTextPrimaryLight,
+    surfaceVariant = HighContrastSurfaceVariantLight,
+    onSurfaceVariant = HighContrastTextSecondaryLight,
+    error = HighContrastErrorLight,
+    onError = HighContrastOnErrorLight,
+    outline = HighContrastOutlineLight,
+    outlineVariant = HighContrastOutlineLight
 )
 
 @Composable
@@ -65,26 +113,35 @@ fun QuizTheme(
     highContrast: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        darkTheme -> {
-            if (highContrast) DarkColorScheme.copy(
-                primary = HighContrastPrimaryDark,
-                error = ErrorDark.copy(red = 1f)
-            ) else DarkColorScheme
-        }
+    SystemAppearance(isDark = darkTheme)
 
-        else -> {
-            if (highContrast) LightColorScheme.copy(
-                primary = HighContrastPrimaryLight,
-                error = ErrorLight.copy(red = 0.8f)
-            ) else LightColorScheme
-        }
+    val colorScheme = when {
+        darkTheme && highContrast -> HighContrastDarkColorScheme
+        darkTheme -> DarkColorScheme
+        highContrast -> HighContrastLightColorScheme
+        else -> LightColorScheme
     }
 
-    val extendedColors = if (darkTheme) {
-        ExtendedColors(success = SuccessDark, onSuccess = SurfaceLight)
-    } else {
-        ExtendedColors(success = SuccessLight, onSuccess = SurfaceLight)
+    val extendedColors = when {
+        darkTheme && highContrast -> ExtendedColors(
+            success = HighContrastSuccessDark,
+            onSuccess = HighContrastOnSuccessDark
+        )
+
+        darkTheme -> ExtendedColors(
+            success = SuccessDark,
+            onSuccess = OnSuccessDark
+        )
+
+        highContrast -> ExtendedColors(
+            success = HighContrastSuccessLight,
+            onSuccess = HighContrastOnSuccessLight
+        )
+
+        else -> ExtendedColors(
+            success = SuccessLight,
+            onSuccess = OnSuccessLight
+        )
     }
 
     CompositionLocalProvider(LocalExtendedColors provides extendedColors) {

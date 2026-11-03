@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -18,7 +19,6 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,12 +30,16 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -73,12 +77,18 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -92,10 +102,13 @@ import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.presentation.mapper.toStringRes
 import pl.pdgroup.quiz.presentation.model.QuestionUiModel
+import pl.pdgroup.quiz.ui.accessibility.rememberPrefersReducedMotion
 import pl.pdgroup.quiz.ui.adaptive.AdaptiveContainer
 import pl.pdgroup.quiz.ui.adaptive.FormFactorPreviews
 import pl.pdgroup.quiz.ui.theme.QuizTheme
 import quizmaster.shared.generated.resources.Res
+import quizmaster.shared.generated.resources.a11y_correct_answer
+import quizmaster.shared.generated.resources.a11y_incorrect_answer
 import quizmaster.shared.generated.resources.back
 import quizmaster.shared.generated.resources.quiz_btn_next_question
 import quizmaster.shared.generated.resources.quiz_btn_view_results
@@ -375,15 +388,21 @@ fun ExitQuizDialog(onDismiss: () -> Unit, onExit: () -> Unit) {
         title = { Text(stringResource(Res.string.quiz_exit_dialog_title)) },
         text = { Text(stringResource(Res.string.quiz_exit_dialog_message)) },
         confirmButton = {
-            TextButton(onClick = {
-                onDismiss()
-                onExit()
-            }) {
+            TextButton(
+                onClick = {
+                    onDismiss()
+                    onExit()
+                },
+                modifier = Modifier.heightIn(min = 48.dp)
+            ) {
                 Text(stringResource(Res.string.quiz_exit_dialog_exit), color = MaterialTheme.colorScheme.error)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.heightIn(min = 48.dp)
+            ) {
                 Text(stringResource(Res.string.quiz_exit_dialog_resume))
             }
         }
@@ -392,7 +411,14 @@ fun ExitQuizDialog(onDismiss: () -> Unit, onExit: () -> Unit) {
 
 @Composable
 fun QuizLoadingState() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .semantics(mergeDescendants = true) {
+                liveRegion = LiveRegionMode.Polite
+            },
+        contentAlignment = Alignment.Center
+    ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
@@ -419,7 +445,9 @@ fun QuizErrorState(
         Card(
             modifier = Modifier
                 .padding(24.dp)
-                .widthIn(max = 500.dp),
+                .widthIn(max = 500.dp)
+                .semantics { liveRegion = LiveRegionMode.Polite },
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
         ) {
             Column(
@@ -436,10 +464,16 @@ fun QuizErrorState(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    OutlinedButton(onClick = onNavigateBack) {
+                    OutlinedButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier.heightIn(min = 48.dp)
+                    ) {
                         Text(stringResource(Res.string.back))
                     }
-                    Button(onClick = onRetry) {
+                    Button(
+                        onClick = onRetry,
+                        modifier = Modifier.heightIn(min = 48.dp)
+                    ) {
                         Text(stringResource(Res.string.retry))
                     }
                 }
@@ -459,7 +493,10 @@ fun QuizHeader(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = onExitClick) {
+        IconButton(
+            onClick = onExitClick,
+            modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+        ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = stringResource(Res.string.back),
@@ -471,12 +508,17 @@ fun QuizHeader(
         Text(
             text = stringResource(Res.string.quiz_question_counter, currentQuestionIndex + 1, totalQuestions),
             style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .semantics { heading() }
         )
 
-        Column(horizontalAlignment = Alignment.End) {
+        Column(
+            horizontalAlignment = Alignment.End,
+            modifier = Modifier.semantics(mergeDescendants = true) {}
+        ) {
             Text(
-                text = "$score",
+                text = score.toString(),
                 style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -491,14 +533,22 @@ fun QuizHeader(
 
 @Composable
 fun QuizCategoryChips(category: QuizCategory, difficulty: Difficulty) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    val categoryLabel = stringResource(category.toStringRes())
+    val difficultyLabel = stringResource(difficulty.toStringRes())
+
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.clearAndSetSemantics {
+            contentDescription = "$categoryLabel, $difficultyLabel"
+        }
+    ) {
         AssistChip(
             onClick = { },
-            label = { Text(stringResource(category.toStringRes())) },
+            label = { Text(categoryLabel) },
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
             colors = AssistChipDefaults.assistChipColors(
-                containerColor = MaterialTheme.colorScheme.primary.copy(
-                    alpha = 0.1f
-                )
+                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                labelColor = MaterialTheme.colorScheme.onSurface
             )
         )
 
@@ -510,17 +560,22 @@ fun QuizCategoryChips(category: QuizCategory, difficulty: Difficulty) {
 
         AssistChip(
             onClick = { },
-            label = { Text(stringResource(difficulty.toStringRes())) },
-            colors = AssistChipDefaults.assistChipColors(containerColor = diffColor.copy(alpha = 0.1f))
+            label = { Text(difficultyLabel) },
+            border = BorderStroke(1.dp, diffColor),
+            colors = AssistChipDefaults.assistChipColors(
+                containerColor = diffColor.copy(alpha = 0.12f),
+                labelColor = MaterialTheme.colorScheme.onSurface
+            )
         )
     }
 }
 
 @Composable
 fun QuizProgressBar(currentQuestionIndex: Int, totalQuestions: Int) {
+    val reduceMotion = rememberPrefersReducedMotion()
     val animatedProgress by animateFloatAsState(
         targetValue = (currentQuestionIndex + 1).toFloat() / totalQuestions,
-        animationSpec = tween(500, easing = LinearOutSlowInEasing)
+        animationSpec = if (reduceMotion) snap() else tween(500, easing = LinearOutSlowInEasing)
     )
     LinearProgressIndicator(
         progress = { animatedProgress },
@@ -529,7 +584,7 @@ fun QuizProgressBar(currentQuestionIndex: Int, totalQuestions: Int) {
             .height(8.dp)
             .clip(RoundedCornerShape(4.dp)),
         color = MaterialTheme.colorScheme.primary,
-        trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+        trackColor = MaterialTheme.colorScheme.surfaceVariant,
         drawStopIndicator = {}
     )
 }
@@ -541,10 +596,13 @@ fun QuizQuestionContent(
     isCompact: Boolean = false,
     onIntent: (QuizContract.Intent) -> Unit
 ) {
+    val reduceMotion = rememberPrefersReducedMotion()
     AnimatedContent(
         targetState = state.currentQuestionIndex,
         transitionSpec = {
-            if (targetState > initialState) {
+            if (reduceMotion) {
+                fadeIn(tween(0)).togetherWith(fadeOut(tween(0)))
+            } else if (targetState > initialState) {
                 (slideInHorizontally(animationSpec = tween(300)) { width -> width } + fadeIn(
                     animationSpec = tween(300)
                 )).togetherWith(
@@ -584,10 +642,13 @@ private fun QuizQuestionCardAnimated(
     state: QuizContract.State,
     isCompact: Boolean
 ) {
+    val reduceMotion = rememberPrefersReducedMotion()
     AnimatedContent(
         targetState = state.currentQuestionIndex,
         transitionSpec = {
-            if (targetState > initialState) {
+            if (reduceMotion) {
+                fadeIn(tween(0)).togetherWith(fadeOut(tween(0)))
+            } else if (targetState > initialState) {
                 (slideInHorizontally(animationSpec = tween(300)) { width -> width } + fadeIn(
                     animationSpec = tween(300)
                 )).togetherWith(
@@ -614,10 +675,13 @@ private fun QuizAnswersAnimated(
     isCompact: Boolean,
     onIntent: (QuizContract.Intent) -> Unit
 ) {
+    val reduceMotion = rememberPrefersReducedMotion()
     AnimatedContent(
         targetState = state.currentQuestionIndex,
         transitionSpec = {
-            if (targetState > initialState) {
+            if (reduceMotion) {
+                fadeIn(tween(0)).togetherWith(fadeOut(tween(0)))
+            } else if (targetState > initialState) {
                 (slideInHorizontally(animationSpec = tween(300)) { width -> width } + fadeIn(
                     animationSpec = tween(300)
                 )).togetherWith(
@@ -650,6 +714,7 @@ private fun QuestionPromptCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -657,8 +722,9 @@ private fun QuestionPromptCard(
             text = questionText,
             style = if (isCompact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface,
-            lineHeight = 28.sp,
-            modifier = Modifier.padding(if (isCompact) 20.dp else 32.dp)
+            modifier = Modifier
+                .padding(if (isCompact) 20.dp else 32.dp)
+                .semantics { heading() }
         )
     }
 }
@@ -681,7 +747,10 @@ private fun AnswerOptionsLayout(
     val verticalGap = if (isCompact) 12.dp else 16.dp
 
     if (columns >= 2) {
-        Column(verticalArrangement = Arrangement.spacedBy(verticalGap)) {
+        Column(
+            modifier = Modifier.selectableGroup(),
+            verticalArrangement = Arrangement.spacedBy(verticalGap)
+        ) {
             question.answers.chunked(columns).forEachIndexed { rowIndex, rowAnswers ->
                 Row(
                     modifier = Modifier
@@ -714,7 +783,10 @@ private fun AnswerOptionsLayout(
             }
         }
     } else {
-        Column(verticalArrangement = Arrangement.spacedBy(verticalGap)) {
+        Column(
+            modifier = Modifier.selectableGroup(),
+            verticalArrangement = Arrangement.spacedBy(verticalGap)
+        ) {
             question.answers.forEachIndexed { ansIndex, answer ->
                 AnswerOption(
                     answer = answer,
@@ -736,6 +808,7 @@ fun QuizResultFeedback(
     state: QuizContract.State,
     onIntent: (QuizContract.Intent) -> Unit
 ) {
+    val reduceMotion = rememberPrefersReducedMotion()
     val retainedIsCorrect = remember { mutableStateOf(state.isCorrect) }
     val retainedShowCorrectAnswer = remember { mutableStateOf(state.showCorrectAnswer) }
     val retainedCorrectAnswer = remember { mutableStateOf(state.currentQuestion?.correctAnswer) }
@@ -748,12 +821,21 @@ fun QuizResultFeedback(
 
     AnimatedVisibility(
         visible = state.isAnswerLocked,
-        enter = scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy)) + fadeIn() + slideInVertically(
-            initialOffsetY = { 50 }),
-        exit = fadeOut(tween(200)) + slideOutVertically(
-            targetOffsetY = { 50 },
-            animationSpec = tween(200)
-        )
+        enter = if (reduceMotion) {
+            fadeIn(tween(0))
+        } else {
+            scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy)) + fadeIn() + slideInVertically(
+                initialOffsetY = { 50 }
+            )
+        },
+        exit = if (reduceMotion) {
+            fadeOut(tween(0))
+        } else {
+            fadeOut(tween(200)) + slideOutVertically(
+                targetOffsetY = { 50 },
+                animationSpec = tween(200)
+            )
+        }
     ) {
         val isCorrect = retainedIsCorrect.value == true
         val strokeColor = if (isCorrect) {
@@ -761,15 +843,16 @@ fun QuizResultFeedback(
         } else {
             MaterialTheme.colorScheme.error
         }
-        val bgColor = strokeColor.copy(alpha = 0.2f)
+        val bgColor = strokeColor.copy(alpha = 0.14f)
         val icon = if (isCorrect) Icons.Default.CheckCircle else Icons.Default.Close
 
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp),
+                .padding(bottom = 16.dp)
+                .semantics { liveRegion = LiveRegionMode.Polite },
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, strokeColor),
+            border = BorderStroke(1.5.dp, strokeColor),
             shape = RoundedCornerShape(12.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
@@ -800,6 +883,8 @@ fun QuizResultFeedback(
                         if (!retainedShowCorrectAnswer.value) {
                             OutlinedButton(
                                 onClick = { onIntent(QuizContract.Intent.ShowCorrectAnswer) },
+                                modifier = Modifier.heightIn(min = 48.dp),
+                                border = BorderStroke(1.dp, strokeColor),
                                 colors = ButtonDefaults.outlinedButtonColors(contentColor = strokeColor)
                             ) {
                                 Text(stringResource(Res.string.quiz_show_correct_answer))
@@ -825,6 +910,7 @@ fun QuizActionButtons(
     isCompact: Boolean = false,
     onIntent: (QuizContract.Intent) -> Unit
 ) {
+    val reduceMotion = rememberPrefersReducedMotion()
     val retainedIsLastQuestion = remember { mutableStateOf(state.isLastQuestion) }
 
     if (state.isAnswerLocked) {
@@ -833,23 +919,34 @@ fun QuizActionButtons(
 
     AnimatedVisibility(
         visible = state.isAnswerLocked,
-        enter = fadeIn(tween(300)) + slideInVertically(
-            initialOffsetY = { 50 },
-            animationSpec = tween(300)
-        ),
-        exit = fadeOut(tween(200)) + slideOutVertically(
-            targetOffsetY = { 50 },
-            animationSpec = tween(200)
-        )
+        enter = if (reduceMotion) {
+            fadeIn(tween(0))
+        } else {
+            fadeIn(tween(300)) + slideInVertically(
+                initialOffsetY = { 50 },
+                animationSpec = tween(300)
+            )
+        },
+        exit = if (reduceMotion) {
+            fadeOut(tween(0))
+        } else {
+            fadeOut(tween(200)) + slideOutVertically(
+                targetOffsetY = { 50 },
+                animationSpec = tween(200)
+            )
+        }
     ) {
         Button(
             onClick = { onIntent(QuizContract.Intent.NextQuestion) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = if (isCompact) 16.dp else 24.dp)
-                .height(if (isCompact) 56.dp else 64.dp),
+                .heightIn(min = if (isCompact) 56.dp else 64.dp),
             shape = RoundedCornerShape(20.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ),
             elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
         ) {
             Text(
@@ -873,47 +970,71 @@ fun AnswerOption(
     modifier: Modifier = Modifier,
     isCompact: Boolean = false
 ) {
-    val alphaAnim = remember { Animatable(0f) }
-    val offsetXAnim = remember { Animatable(-20f) }
+    val reduceMotion = rememberPrefersReducedMotion()
+    val alphaAnim = remember { Animatable(if (reduceMotion) 1f else 0f) }
+    val offsetXAnim = remember { Animatable(if (reduceMotion) 0f else -20f) }
 
-    LaunchedEffect(Unit) {
-        delay(delayMs)
-        launch { alphaAnim.animateTo(1f, tween(300)) }
-        launch { offsetXAnim.animateTo(0f, tween(300)) }
+    LaunchedEffect(reduceMotion) {
+        if (reduceMotion) {
+            alphaAnim.snapTo(1f)
+            offsetXAnim.snapTo(0f)
+        } else {
+            delay(delayMs)
+            launch { alphaAnim.animateTo(1f, tween(300)) }
+            launch { offsetXAnim.animateTo(0f, tween(300)) }
+        }
     }
 
     val successColor = QuizTheme.extendedColors.success
+    val onSuccessColor = QuizTheme.extendedColors.onSuccess
     val errorColor = MaterialTheme.colorScheme.error
+    val onErrorColor = MaterialTheme.colorScheme.onError
 
     val bgColor = when {
-        isLocked && isSelected && isCorrect -> successColor.copy(alpha = 0.2f)
-        isLocked && isSelected && !isCorrect -> errorColor.copy(alpha = 0.2f)
+        isLocked && isSelected && isCorrect -> successColor.copy(alpha = 0.16f)
+        isLocked && isSelected && !isCorrect -> errorColor.copy(alpha = 0.16f)
         else -> MaterialTheme.colorScheme.surface
     }
 
     val borderColor = when {
         isLocked && isSelected && isCorrect -> successColor
         isLocked && isSelected && !isCorrect -> errorColor
-        else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+        isSelected -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.outline
     }
 
     val iconBgColor = when {
         isLocked && isSelected && isCorrect -> successColor
         isLocked && isSelected && !isCorrect -> errorColor
         isSelected && !isLocked -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+        else -> MaterialTheme.colorScheme.surfaceVariant
     }
 
-    val finalAlpha = if (isLocked && !isSelected) 0.6f else alphaAnim.value
+    val badgeContentColor = when {
+        isLocked && isSelected && isCorrect -> onSuccessColor
+        isLocked && isSelected && !isCorrect -> onErrorColor
+        isSelected && !isLocked -> MaterialTheme.colorScheme.onPrimary
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+
+    val finalAlpha = if (isLocked && !isSelected) 0.85f else alphaAnim.value
+    val optionShape = RoundedCornerShape(16.dp)
 
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .heightIn(min = 56.dp)
             .alpha(finalAlpha)
             .offset(x = offsetXAnim.value.dp)
-            .clickable(enabled = !isLocked, onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(if (isSelected && isLocked) 2.dp else 1.dp, borderColor),
+            .clip(optionShape)
+            .selectable(
+                selected = isSelected,
+                enabled = !isLocked,
+                role = Role.RadioButton,
+                onClick = onClick
+            ),
+        shape = optionShape,
+        border = BorderStroke(if (isSelected) 2.dp else 1.dp, borderColor),
         colors = CardDefaults.cardColors(containerColor = bgColor)
     ) {
         Row(
@@ -930,21 +1051,22 @@ fun AnswerOption(
                 if (isLocked && isSelected && isCorrect) {
                     Icon(
                         imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        tint = Color.White,
+                        contentDescription = stringResource(Res.string.a11y_correct_answer),
+                        tint = badgeContentColor,
                         modifier = Modifier.size(20.dp)
                     )
                 } else if (isLocked && isSelected && !isCorrect) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = null,
-                        tint = Color.White,
+                        contentDescription = stringResource(Res.string.a11y_incorrect_answer),
+                        tint = badgeContentColor,
                         modifier = Modifier.size(20.dp)
                     )
                 } else {
                     Text(
                         text = letter,
-                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                        color = badgeContentColor,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }

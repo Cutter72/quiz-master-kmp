@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,13 +14,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -57,6 +61,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -67,6 +77,7 @@ import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.presentation.mapper.toStringRes
 import pl.pdgroup.quiz.presentation.model.ScoreUiModel
+import pl.pdgroup.quiz.ui.accessibility.rememberPrefersReducedMotion
 import pl.pdgroup.quiz.ui.adaptive.AdaptiveContainer
 import pl.pdgroup.quiz.ui.adaptive.FormFactorPreviews
 import pl.pdgroup.quiz.ui.theme.QuizTheme
@@ -74,6 +85,7 @@ import quizmaster.shared.generated.resources.Res
 import quizmaster.shared.generated.resources.back
 import quizmaster.shared.generated.resources.scoreboard_empty_subtitle
 import quizmaster.shared.generated.resources.scoreboard_empty_title
+import quizmaster.shared.generated.resources.scoreboard_loading
 import quizmaster.shared.generated.resources.scoreboard_percentage_fmt
 import quizmaster.shared.generated.resources.scoreboard_score_denominator
 import quizmaster.shared.generated.resources.scoreboard_stat_average
@@ -171,7 +183,7 @@ fun ScoreboardScreenContent(
                         totalQuizzes = state.totalQuizzes,
                         averageScore = state.averageScore,
                         bestScore = state.bestScore,
-                        isCompact = layoutInfo.isCompactHeight || layoutInfo.maxWidth < 380.dp
+                        isCompact = (layoutInfo.isCompactHeight || layoutInfo.maxWidth < 380.dp)
                     )
                 }
 
@@ -204,7 +216,10 @@ fun ScoreboardHeader(
             .padding(bottom = if (isCompact) 12.dp else 24.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = onNavigateBack) {
+        IconButton(
+            onClick = onNavigateBack,
+            modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+        ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = stringResource(Res.string.back),
@@ -222,14 +237,24 @@ fun ScoreboardHeader(
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = stringResource(Res.string.scoreboard_title),
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.semantics { heading() }
         )
     }
 }
 
 @Composable
 fun ScoreboardLoadingState() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    val loadingDescription = stringResource(Res.string.scoreboard_loading)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .semantics {
+                contentDescription = loadingDescription
+                liveRegion = LiveRegionMode.Polite
+            },
+        contentAlignment = Alignment.Center
+    ) {
         CircularProgressIndicator()
     }
 }
@@ -241,12 +266,18 @@ fun ScoreboardStatsOverview(
     bestScore: Int,
     isCompact: Boolean = false
 ) {
-    val statsAlpha = remember { Animatable(0f) }
-    val statsOffsetY = remember { Animatable(-20f) }
+    val reduceMotion = rememberPrefersReducedMotion()
+    val statsAlpha = remember { Animatable(if (reduceMotion) 1f else 0f) }
+    val statsOffsetY = remember { Animatable(if (reduceMotion) 0f else -20f) }
 
-    LaunchedEffect(Unit) {
-        launch { statsAlpha.animateTo(1f, tween(500)) }
-        launch { statsOffsetY.animateTo(0f, tween(500)) }
+    LaunchedEffect(reduceMotion) {
+        if (reduceMotion) {
+            statsAlpha.snapTo(1f)
+            statsOffsetY.snapTo(0f)
+        } else {
+            launch { statsAlpha.animateTo(1f, tween(400)) }
+            launch { statsOffsetY.animateTo(0f, tween(400)) }
+        }
     }
 
     val avgStr = ((averageScore * 10).toInt() / 10.0).toString()
@@ -261,7 +292,7 @@ fun ScoreboardStatsOverview(
     ) {
         StatCard(
             modifier = Modifier.weight(1f),
-            value = "$totalQuizzes",
+            value = totalQuizzes.toString(),
             label = stringResource(Res.string.scoreboard_stat_quizzes),
             color = MaterialTheme.colorScheme.primary,
             isCompact = isCompact
@@ -298,7 +329,7 @@ private fun ScoreboardStatsSidebar(
     ) {
         StatCard(
             modifier = Modifier.fillMaxWidth(),
-            value = "$totalQuizzes",
+            value = totalQuizzes.toString(),
             label = stringResource(Res.string.scoreboard_stat_quizzes),
             color = MaterialTheme.colorScheme.primary
         )
@@ -326,8 +357,9 @@ fun StatCard(
     isCompact: Boolean = false
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier.semantics(mergeDescendants = true) {},
         shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -342,14 +374,14 @@ fun StatCard(
                 style = if (isCompact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
                 color = color,
                 fontWeight = FontWeight.SemiBold,
-                maxLines = 1
+                textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = label,
                 style = if (isCompact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -362,10 +394,16 @@ fun ScoreboardCategoryTabs(
     isCompact: Boolean = false,
     onCategorySelected: (QuizCategory?) -> Unit
 ) {
-    val tabsAlpha = remember { Animatable(0f) }
-    LaunchedEffect(Unit) {
-        delay(100)
-        tabsAlpha.animateTo(1f, tween(500))
+    val reduceMotion = rememberPrefersReducedMotion()
+    val tabsAlpha = remember { Animatable(if (reduceMotion) 1f else 0f) }
+
+    LaunchedEffect(reduceMotion) {
+        if (reduceMotion) {
+            tabsAlpha.snapTo(1f)
+        } else {
+            delay(100)
+            tabsAlpha.animateTo(1f, tween(400))
+        }
     }
 
     Card(
@@ -374,6 +412,7 @@ fun ScoreboardCategoryTabs(
             .alpha(tabsAlpha.value)
             .padding(bottom = if (isCompact) 12.dp else 20.dp),
         shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         ScrollableTabRow(
@@ -385,22 +424,23 @@ fun ScoreboardCategoryTabs(
         ) {
             categories.forEach { category ->
                 val isSelected = category == selectedCategory
+                val tabShape = RoundedCornerShape(8.dp)
                 Tab(
                     selected = isSelected,
                     onClick = { onCategorySelected(category) },
                     modifier = Modifier
-                        .height(if (isCompact) 40.dp else 48.dp)
+                        .heightIn(min = 48.dp)
                         .padding(horizontal = 4.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(tabShape)
                         .background(
-                            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
                             else Color.Transparent
                         )
                         .pointerHoverIcon(PointerIcon.Hand)
                 ) {
                     Text(
                         text = stringResource(category.toStringRes()),
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                     )
@@ -415,9 +455,13 @@ fun ScoreboardContent(
     state: ScoreboardContract.State,
     gridState: LazyGridState = rememberLazyGridState()
 ) {
+    val reduceMotion = rememberPrefersReducedMotion()
     AnimatedContent(
         targetState = state.filteredScores.isEmpty(),
-        transitionSpec = { fadeIn(tween(500)).togetherWith(fadeOut(tween(500))) }
+        transitionSpec = {
+            val duration = if (reduceMotion) 0 else 400
+            fadeIn(tween(duration)).togetherWith(fadeOut(tween(duration)))
+        }
     ) { isEmpty ->
         if (isEmpty) {
             EmptyState()
@@ -446,6 +490,7 @@ fun EmptyState() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
@@ -457,7 +502,7 @@ fun EmptyState() {
             Icon(
                 imageVector = Icons.Default.EmojiEvents,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .size(80.dp)
                     .padding(bottom = 16.dp)
@@ -465,8 +510,9 @@ fun EmptyState() {
             Text(
                 text = stringResource(Res.string.scoreboard_empty_title),
                 style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Medium
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.semantics { heading() }
             )
             Text(
                 text = stringResource(Res.string.scoreboard_empty_subtitle),
@@ -481,22 +527,28 @@ fun EmptyState() {
 
 @Composable
 fun ScoreCard(score: ScoreUiModel, delayMs: Long) {
-    val alphaAnim = remember { Animatable(0f) }
-    val offsetXAnim = remember { Animatable(-20f) }
+    val reduceMotion = rememberPrefersReducedMotion()
+    val alphaAnim = remember { Animatable(if (reduceMotion) 1f else 0f) }
+    val offsetXAnim = remember { Animatable(if (reduceMotion) 0f else -20f) }
 
-    LaunchedEffect(Unit) {
-        delay(delayMs)
-        launch { alphaAnim.animateTo(1f, tween(100)) }
-        launch { offsetXAnim.animateTo(0f, tween(100)) }
+    LaunchedEffect(reduceMotion) {
+        if (reduceMotion) {
+            alphaAnim.snapTo(1f)
+            offsetXAnim.snapTo(0f)
+        } else {
+            delay(delayMs)
+            launch { alphaAnim.animateTo(1f, tween(150)) }
+            launch { offsetXAnim.animateTo(0f, tween(150)) }
+        }
     }
 
     val percentage = score.percentage
 
-    val scoreColor = when {
-        percentage >= 80 -> QuizTheme.extendedColors.success
-        percentage >= 60 -> MaterialTheme.colorScheme.primary
-        percentage >= 40 -> MaterialTheme.colorScheme.secondary
-        else -> MaterialTheme.colorScheme.error
+    val (scoreColor, scoreContentColor) = when {
+        percentage >= 80 -> QuizTheme.extendedColors.success to QuizTheme.extendedColors.onSuccess
+        percentage >= 60 -> MaterialTheme.colorScheme.primary to MaterialTheme.colorScheme.onPrimary
+        percentage >= 40 -> MaterialTheme.colorScheme.secondary to MaterialTheme.colorScheme.onSecondary
+        else -> MaterialTheme.colorScheme.error to MaterialTheme.colorScheme.onError
     }
 
     val diffColor = when (score.difficulty) {
@@ -505,12 +557,16 @@ fun ScoreCard(score: ScoreUiModel, delayMs: Long) {
         Difficulty.HARD -> MaterialTheme.colorScheme.error
     }
 
+    val difficultyLabel = stringResource(score.difficulty.toStringRes())
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .alpha(alphaAnim.value)
-            .offset(x = offsetXAnim.value.dp),
+            .offset(x = offsetXAnim.value.dp)
+            .semantics(mergeDescendants = true) {},
         shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -522,22 +578,23 @@ fun ScoreCard(score: ScoreUiModel, delayMs: Long) {
         ) {
             Box(
                 modifier = Modifier
-                    .size(64.dp)
+                    .defaultMinSize(minWidth = 64.dp, minHeight = 64.dp)
                     .clip(CircleShape)
-                    .background(scoreColor),
+                    .background(scoreColor)
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "${score.score}",
                         style = MaterialTheme.typography.titleLarge,
-                        color = Color.White,
+                        color = scoreContentColor,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = stringResource(Res.string.scoreboard_score_denominator, score.totalQuestions),
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color.White.copy(alpha = 0.8f)
+                        color = scoreContentColor
                     )
                 }
             }
@@ -574,14 +631,18 @@ fun ScoreCard(score: ScoreUiModel, delayMs: Long) {
                 AssistChip(
                     onClick = { },
                     label = {
-                        Text(stringResource(score.difficulty.toStringRes()))
+                        Text(difficultyLabel)
                     },
+                    border = BorderStroke(1.dp, diffColor),
                     colors = AssistChipDefaults.assistChipColors(
-                        containerColor = diffColor.copy(
-                            alpha = 0.1f
-                        )
+                        containerColor = diffColor.copy(alpha = 0.12f),
+                        labelColor = MaterialTheme.colorScheme.onSurface
                     ),
-                    modifier = Modifier.height(32.dp)
+                    modifier = Modifier
+                        .heightIn(min = 32.dp)
+                        .clearAndSetSemantics {
+                            contentDescription = difficultyLabel
+                        }
                 )
             }
 

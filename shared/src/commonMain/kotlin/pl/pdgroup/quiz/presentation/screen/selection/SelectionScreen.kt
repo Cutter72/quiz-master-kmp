@@ -7,14 +7,15 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,9 +23,12 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -48,8 +52,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -60,6 +71,7 @@ import org.jetbrains.compose.resources.stringResource
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.presentation.mapper.toStringRes
+import pl.pdgroup.quiz.ui.accessibility.rememberPrefersReducedMotion
 import pl.pdgroup.quiz.ui.adaptive.AdaptiveContainer
 import pl.pdgroup.quiz.ui.adaptive.FormFactorPreviews
 import pl.pdgroup.quiz.ui.theme.QuizTheme
@@ -68,6 +80,7 @@ import quizmaster.shared.generated.resources.back
 import quizmaster.shared.generated.resources.home_start_quiz_title
 import quizmaster.shared.generated.resources.notice
 import quizmaster.shared.generated.resources.ok
+import quizmaster.shared.generated.resources.quiz_loading_questions
 import quizmaster.shared.generated.resources.selection_category_title
 import quizmaster.shared.generated.resources.selection_difficulty_title
 import quizmaster.shared.generated.resources.selection_header_title
@@ -105,7 +118,6 @@ fun SelectionScreenContent(
             layoutInfo.isCompactWidth -> 2
             else -> 3
         }
-        val difficultyColumns = if (layoutInfo.maxWidth < 360.dp) 1 else 3
         val sectionSpacing = if (layoutInfo.isCompactHeight) 16.dp else 28.dp
 
         if (layoutInfo.preferTwoPane) {
@@ -155,7 +167,6 @@ fun SelectionScreenContent(
                         DifficultySelection(
                             difficulties = state.difficulties,
                             selectedDifficulty = state.selectedDifficulty,
-                            maxItemsInEachRow = difficultyColumns,
                             isCompact = layoutInfo.isCompactHeight,
                             onDifficultySelected = {
                                 onIntent(
@@ -218,7 +229,6 @@ fun SelectionScreenContent(
                 DifficultySelection(
                     difficulties = state.difficulties,
                     selectedDifficulty = state.selectedDifficulty,
-                    maxItemsInEachRow = difficultyColumns,
                     isCompact = layoutInfo.isCompactHeight,
                     onDifficultySelected = { onIntent(SelectionContract.Intent.SelectDifficulty(it)) }
                 )
@@ -257,7 +267,10 @@ fun SelectionErrorDialog(
         title = { Text(stringResource(Res.string.notice)) },
         text = { Text(error?.asString() ?: "") },
         confirmButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.heightIn(min = 48.dp)
+            ) {
                 Text(stringResource(Res.string.ok))
             }
         }
@@ -270,7 +283,10 @@ fun SelectionHeader(onNavigateBack: () -> Unit) {
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = onNavigateBack) {
+        IconButton(
+            onClick = onNavigateBack,
+            modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+        ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = stringResource(Res.string.back),
@@ -281,7 +297,8 @@ fun SelectionHeader(onNavigateBack: () -> Unit) {
         Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = stringResource(Res.string.selection_header_title),
-            style = MaterialTheme.typography.headlineLarge
+            style = MaterialTheme.typography.headlineLarge,
+            modifier = Modifier.semantics { heading() }
         )
     }
 }
@@ -294,27 +311,45 @@ fun CategorySelection(
     isCompact: Boolean = false,
     onCategorySelected: (QuizCategory) -> Unit
 ) {
+    val columns = maxItemsInEachRow.coerceAtLeast(1)
     SelectionCard(
         title = stringResource(Res.string.selection_category_title),
         delayMs = 0,
         isCompact = isCompact
     ) {
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            maxItemsInEachRow = maxItemsInEachRow
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .selectableGroup(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            categories.forEachIndexed { index, category ->
-                val isSelected = selectedCategory == category
-                Box(modifier = Modifier.weight(1f)) {
-                    SelectableChip(
-                        text = stringResource(category.toStringRes()),
-                        isSelected = isSelected,
-                        selectedColor = MaterialTheme.colorScheme.primary,
-                        delayMs = index * 50L,
-                        onClick = { onCategorySelected(category) }
-                    )
+            categories.chunked(columns).forEachIndexed { rowIndex, rowCategories ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Max),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    rowCategories.forEachIndexed { colIndex, category ->
+                        val index = rowIndex * columns + colIndex
+                        val isSelected = selectedCategory == category
+                        SelectableChip(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                            text = stringResource(category.toStringRes()),
+                            isSelected = isSelected,
+                            selectedColor = MaterialTheme.colorScheme.primary,
+                            selectedContentColor = MaterialTheme.colorScheme.onPrimary,
+                            delayMs = index * 50L,
+                            onClick = { onCategorySelected(category) }
+                        )
+                    }
+                    if (rowCategories.size < columns) {
+                        repeat(columns - rowCategories.size) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
                 }
             }
         }
@@ -325,7 +360,6 @@ fun CategorySelection(
 fun DifficultySelection(
     difficulties: List<Difficulty>,
     selectedDifficulty: Difficulty?,
-    maxItemsInEachRow: Int = 3,
     isCompact: Boolean = false,
     onDifficultySelected: (Difficulty) -> Unit
 ) {
@@ -334,29 +368,33 @@ fun DifficultySelection(
         delayMs = 200,
         isCompact = isCompact
     ) {
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            maxItemsInEachRow = maxItemsInEachRow
+        val scrollState = rememberScrollState()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(scrollState)
+                .height(IntrinsicSize.Max)
+                .selectableGroup(),
+            horizontalArrangement = Arrangement.SpaceAround
         ) {
             difficulties.forEachIndexed { index, difficulty ->
                 val isSelected = selectedDifficulty == difficulty
-                val color = when (difficulty) {
-                    Difficulty.EASY -> QuizTheme.extendedColors.success
-                    Difficulty.MEDIUM -> MaterialTheme.colorScheme.secondary
-                    Difficulty.HARD -> MaterialTheme.colorScheme.error
+                val (bgColor, contentColor) = when (difficulty) {
+                    Difficulty.EASY -> QuizTheme.extendedColors.success to QuizTheme.extendedColors.onSuccess
+                    Difficulty.MEDIUM -> MaterialTheme.colorScheme.secondary to MaterialTheme.colorScheme.onSecondary
+                    Difficulty.HARD -> MaterialTheme.colorScheme.error to MaterialTheme.colorScheme.onError
                 }
 
-                Box(modifier = Modifier.weight(1f)) {
-                    SelectableChip(
-                        text = stringResource(difficulty.toStringRes()),
-                        isSelected = isSelected,
-                        selectedColor = color,
-                        delayMs = 200L + (index * 50L),
-                        onClick = { onDifficultySelected(difficulty) }
-                    )
-                }
+                SelectableChip(
+                    modifier = Modifier.fillMaxHeight(),
+                    text = stringResource(difficulty.toStringRes()),
+                    isSelected = isSelected,
+                    selectedColor = bgColor,
+                    selectedContentColor = contentColor,
+                    delayMs = 200L + (index * 50L),
+                    maxLines = 1,
+                    onClick = { onDifficultySelected(difficulty) }
+                )
             }
         }
     }
@@ -368,18 +406,28 @@ fun SelectionInfoPanel(
     selectedDifficulty: Difficulty?,
     availableQuestionsCount: Int
 ) {
+    val reduceMotion = rememberPrefersReducedMotion()
     AnimatedVisibility(
         visible = selectedCategory != null && selectedDifficulty != null,
-        enter = fadeIn(tween(500))
+        enter = fadeIn(tween(if (reduceMotion) 0 else 400))
     ) {
+        val shape = RoundedCornerShape(8.dp)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                    shape = RoundedCornerShape(8.dp)
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    shape = shape
                 )
-                .padding(24.dp),
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = shape
+                )
+                .padding(24.dp)
+                .semantics(mergeDescendants = true) {
+                    liveRegion = LiveRegionMode.Polite
+                },
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -413,13 +461,20 @@ fun StartQuizButton(
     isLoading: Boolean,
     onStartClick: () -> Unit
 ) {
-    val startButtonAlpha = remember { Animatable(0f) }
-    val startButtonOffsetY = remember { Animatable(20f) }
+    val reduceMotion = rememberPrefersReducedMotion()
+    val startButtonAlpha = remember { Animatable(if (reduceMotion) 1f else 0f) }
+    val startButtonOffsetY = remember { Animatable(if (reduceMotion) 0f else 20f) }
+    val loadingDescription = stringResource(Res.string.quiz_loading_questions)
 
-    LaunchedEffect(Unit) {
-        delay(400)
-        launch { startButtonAlpha.animateTo(1f, tween(300)) }
-        launch { startButtonOffsetY.animateTo(0f, tween(300)) }
+    LaunchedEffect(reduceMotion) {
+        if (reduceMotion) {
+            startButtonAlpha.snapTo(1f)
+            startButtonOffsetY.snapTo(0f)
+        } else {
+            delay(400)
+            launch { startButtonAlpha.animateTo(1f, tween(300)) }
+            launch { startButtonOffsetY.animateTo(0f, tween(300)) }
+        }
     }
 
     Button(
@@ -427,18 +482,21 @@ fun StartQuizButton(
         enabled = isStartEnabled,
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
+            .heightIn(min = 64.dp)
             .alpha(startButtonAlpha.value)
             .offset(y = startButtonOffsetY.value.dp),
         shape = RoundedCornerShape(20.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
         )
     ) {
         if (isLoading) {
             CircularProgressIndicator(
                 color = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier
+                    .size(24.dp)
+                    .semantics { contentDescription = loadingDescription }
             )
         } else {
             Text(
@@ -457,13 +515,19 @@ fun SelectionCard(
     isCompact: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val alphaAnim = remember { Animatable(0f) }
-    val offsetYAnim = remember { Animatable(20f) }
+    val reduceMotion = rememberPrefersReducedMotion()
+    val alphaAnim = remember { Animatable(if (reduceMotion) 1f else 0f) }
+    val offsetYAnim = remember { Animatable(if (reduceMotion) 0f else 20f) }
 
-    LaunchedEffect(Unit) {
-        delay(delayMs)
-        launch { alphaAnim.animateTo(1f, tween(500)) }
-        launch { offsetYAnim.animateTo(0f, tween(500)) }
+    LaunchedEffect(reduceMotion) {
+        if (reduceMotion) {
+            alphaAnim.snapTo(1f)
+            offsetYAnim.snapTo(0f)
+        } else {
+            delay(delayMs)
+            launch { alphaAnim.animateTo(1f, tween(400)) }
+            launch { offsetYAnim.animateTo(0f, tween(400)) }
+        }
     }
 
     Card(
@@ -479,7 +543,9 @@ fun SelectionCard(
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = if (isCompact) 16.dp else 20.dp)
+                modifier = Modifier
+                    .padding(bottom = if (isCompact) 16.dp else 20.dp)
+                    .semantics { heading() }
             )
             content()
         }
@@ -492,52 +558,71 @@ fun SelectableChip(
     isSelected: Boolean,
     selectedColor: Color,
     delayMs: Long,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    selectedContentColor: Color = Color.White,
+    maxLines: Int = Int.MAX_VALUE
 ) {
-    val alphaAnim = remember { Animatable(0f) }
-    val scaleAnimEntry = remember { Animatable(0.8f) }
+    val reduceMotion = rememberPrefersReducedMotion()
+    val alphaAnim = remember { Animatable(if (reduceMotion) 1f else 0f) }
+    val scaleAnimEntry = remember { Animatable(if (reduceMotion) 1f else 0.85f) }
 
-    LaunchedEffect(Unit) {
-        delay(delayMs)
-        launch { alphaAnim.animateTo(1f, tween(300)) }
-        launch { scaleAnimEntry.animateTo(1f, spring(stiffness = Spring.StiffnessMedium)) }
+    LaunchedEffect(reduceMotion) {
+        if (reduceMotion) {
+            alphaAnim.snapTo(1f)
+            scaleAnimEntry.snapTo(1f)
+        } else {
+            delay(delayMs)
+            launch { alphaAnim.animateTo(1f, tween(250)) }
+            launch { scaleAnimEntry.animateTo(1f, spring(stiffness = Spring.StiffnessMedium)) }
+        }
     }
 
-    val interactionSource = remember { MutableInteractionSource() }
     val coroutineScope = rememberCoroutineScope()
     val scaleAnim = remember { Animatable(1f) }
+    val chipShape = RoundedCornerShape(8.dp)
+    val borderColor = if (isSelected) selectedColor else MaterialTheme.colorScheme.outline
 
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
             .heightIn(min = 56.dp)
             .alpha(alphaAnim.value)
             .scale(scaleAnimEntry.value * scaleAnim.value)
+            .clip(chipShape)
             .background(
-                color = if (isSelected) selectedColor else MaterialTheme.colorScheme.onSurface.copy(
-                    alpha = 0.12f
-                ),
-                shape = RoundedCornerShape(8.dp)
+                color = if (isSelected) selectedColor else MaterialTheme.colorScheme.surfaceVariant,
+                shape = chipShape
             )
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) {
-                coroutineScope.launch {
-                    scaleAnim.animateTo(0.95f, spring(stiffness = Spring.StiffnessHigh))
-                    scaleAnim.animateTo(1f, spring(stiffness = Spring.StiffnessMedium))
-                    onClick()
+            .border(
+                width = if (isSelected) 2.dp else 1.dp,
+                color = borderColor,
+                shape = chipShape
+            )
+            .selectable(
+                selected = isSelected,
+                role = Role.RadioButton,
+                onClick = {
+                    if (reduceMotion) {
+                        onClick()
+                    } else {
+                        coroutineScope.launch {
+                            scaleAnim.animateTo(0.96f, spring(stiffness = Spring.StiffnessHigh))
+                            scaleAnim.animateTo(1f, spring(stiffness = Spring.StiffnessMedium))
+                            onClick()
+                        }
+                    }
                 }
-            }
+            )
             .padding(horizontal = 12.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+            color = if (isSelected) selectedContentColor else MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.bodyLarge,
-            fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
-            textAlign = TextAlign.Center
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            textAlign = TextAlign.Center,
+            maxLines = maxLines
         )
     }
 }

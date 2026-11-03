@@ -3,17 +3,15 @@ package pl.pdgroup.quiz.presentation.screen.result
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +20,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -36,6 +35,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -56,6 +56,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -66,6 +71,7 @@ import org.jetbrains.compose.resources.stringResource
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.QuizCategory
 import pl.pdgroup.quiz.presentation.mapper.toStringRes
+import pl.pdgroup.quiz.ui.accessibility.rememberPrefersReducedMotion
 import pl.pdgroup.quiz.ui.adaptive.AdaptiveContainer
 import pl.pdgroup.quiz.ui.adaptive.FormFactorPreviews
 import pl.pdgroup.quiz.ui.theme.QuizTheme
@@ -118,9 +124,10 @@ fun ResultScreenContent(
     }
 
     val scrollState = rememberScrollState()
+    val reduceMotion = rememberPrefersReducedMotion()
 
     Box(modifier = Modifier.fillMaxSize()) {
-        if (state.percentage == 100) {
+        if (state.percentage == 100 && !reduceMotion) {
             ConfettiEffect()
         }
 
@@ -247,11 +254,12 @@ fun ResultSaveErrorBanner(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 24.dp),
+            .padding(bottom = 24.dp)
+            .semantics { liveRegion = LiveRegionMode.Polite },
         shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+        border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.error),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
+            containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.12f)
         )
     ) {
         Row(
@@ -269,7 +277,11 @@ fun ResultSaveErrorBanner(
                     .weight(1f)
                     .padding(end = 12.dp)
             )
-            OutlinedButton(onClick = onRetry) {
+            OutlinedButton(
+                onClick = onRetry,
+                modifier = Modifier.heightIn(min = 48.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+            ) {
                 Text(stringResource(Res.string.retry))
             }
         }
@@ -281,20 +293,23 @@ fun ResultTrophy(
     themeColor: Color,
     isCompact: Boolean = false
 ) {
-    val scaleAnim = remember { Animatable(0f) }
+    val reduceMotion = rememberPrefersReducedMotion()
+    val scaleAnim = remember { Animatable(if (reduceMotion) 1f else 0f) }
     val rotateAnim = remember { Animatable(0f) }
     val pulseScaleAnim = remember { Animatable(1f) }
 
-    LaunchedEffect(Unit) {
-        scaleAnim.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
-
-        while (true) {
-            delay(3500)
-            rotateAnim.animateTo(-10f, tween(150))
-            rotateAnim.animateTo(10f, tween(150))
-            rotateAnim.animateTo(-10f, tween(150))
-            rotateAnim.animateTo(0f, tween(150))
-
+    LaunchedEffect(reduceMotion) {
+        if (reduceMotion) {
+            scaleAnim.snapTo(1f)
+            rotateAnim.snapTo(0f)
+            pulseScaleAnim.snapTo(1f)
+        } else {
+            scaleAnim.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
+            delay(400)
+            rotateAnim.animateTo(-10f, tween(120))
+            rotateAnim.animateTo(10f, tween(120))
+            rotateAnim.animateTo(-10f, tween(120))
+            rotateAnim.animateTo(0f, tween(120))
             pulseScaleAnim.animateTo(1.1f, tween(150))
             pulseScaleAnim.animateTo(1f, tween(150))
         }
@@ -324,13 +339,19 @@ fun ResultDetailsCard(
     modifier: Modifier = Modifier,
     isCompact: Boolean = false
 ) {
-    val cardAlphaAnim = remember { Animatable(0f) }
-    val cardOffsetYAnim = remember { Animatable(20f) }
+    val reduceMotion = rememberPrefersReducedMotion()
+    val cardAlphaAnim = remember { Animatable(if (reduceMotion) 1f else 0f) }
+    val cardOffsetYAnim = remember { Animatable(if (reduceMotion) 0f else 20f) }
 
-    LaunchedEffect(Unit) {
-        delay(200)
-        launch { cardAlphaAnim.animateTo(1f, tween(500)) }
-        launch { cardOffsetYAnim.animateTo(0f, tween(500)) }
+    LaunchedEffect(reduceMotion) {
+        if (reduceMotion) {
+            cardAlphaAnim.snapTo(1f)
+            cardOffsetYAnim.snapTo(0f)
+        } else {
+            delay(200)
+            launch { cardAlphaAnim.animateTo(1f, tween(400)) }
+            launch { cardOffsetYAnim.animateTo(0f, tween(400)) }
+        }
     }
 
     Card(
@@ -338,6 +359,7 @@ fun ResultDetailsCard(
             .alpha(cardAlphaAnim.value)
             .offset(y = cardOffsetYAnim.value.dp),
         shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -349,7 +371,9 @@ fun ResultDetailsCard(
                 text = message,
                 style = if (isCompact) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.headlineLarge,
                 color = themeColor,
-                modifier = Modifier.padding(bottom = if (isCompact) 16.dp else 28.dp),
+                modifier = Modifier
+                    .padding(bottom = if (isCompact) 16.dp else 28.dp)
+                    .semantics { heading() },
                 textAlign = TextAlign.Center
             )
 
@@ -377,9 +401,10 @@ fun ResultDetailsCard(
 
 @Composable
 fun ResultProgressBar(percentage: Int, themeColor: Color) {
+    val reduceMotion = rememberPrefersReducedMotion()
     val animatedProgress by animateFloatAsState(
         targetValue = percentage / 100f,
-        animationSpec = tween(1000, easing = FastOutSlowInEasing)
+        animationSpec = if (reduceMotion) snap() else tween(800, easing = FastOutSlowInEasing)
     )
 
     LinearProgressIndicator(
@@ -390,19 +415,25 @@ fun ResultProgressBar(percentage: Int, themeColor: Color) {
             .height(12.dp)
             .clip(RoundedCornerShape(6.dp)),
         color = themeColor,
-        trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+        trackColor = MaterialTheme.colorScheme.surfaceVariant,
         drawStopIndicator = {}
     )
 }
 
 @Composable
 fun ResultInfoPanel(category: QuizCategory, difficulty: Difficulty) {
+    val shape = RoundedCornerShape(8.dp)
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                shape = RoundedCornerShape(8.dp)
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = shape
+            )
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
+                shape = shape
             )
             .padding(16.dp)
     ) {
@@ -512,17 +543,23 @@ fun AnimatedButton(
     modifier: Modifier = Modifier,
     isCompact: Boolean = false
 ) {
-    val alphaAnim = remember { Animatable(0f) }
-    val offsetYAnim = remember { Animatable(20f) }
+    val reduceMotion = rememberPrefersReducedMotion()
+    val alphaAnim = remember { Animatable(if (reduceMotion) 1f else 0f) }
+    val offsetYAnim = remember { Animatable(if (reduceMotion) 0f else 20f) }
 
-    LaunchedEffect(Unit) {
-        delay(delayMs)
-        launch { alphaAnim.animateTo(1f, tween(500)) }
-        launch { offsetYAnim.animateTo(0f, tween(500)) }
+    LaunchedEffect(reduceMotion) {
+        if (reduceMotion) {
+            alphaAnim.snapTo(1f)
+            offsetYAnim.snapTo(0f)
+        } else {
+            delay(delayMs)
+            launch { alphaAnim.animateTo(1f, tween(400)) }
+            launch { offsetYAnim.animateTo(0f, tween(400)) }
+        }
     }
 
     val buttonModifier = (if (modifier == Modifier) Modifier.fillMaxWidth() else modifier)
-        .height(if (isCompact) 56.dp else 64.dp)
+        .heightIn(min = if (isCompact) 56.dp else 64.dp)
         .alpha(alphaAnim.value)
         .offset(y = offsetYAnim.value.dp)
 
@@ -540,14 +577,23 @@ fun AnimatedButton(
         OutlinedButton(
             onClick = onClick,
             modifier = buttonModifier,
-            shape = RoundedCornerShape(20.dp)
+            shape = RoundedCornerShape(20.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
         ) {
             Icon(imageVector = icon, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
             Text(text = text, fontSize = 18.sp, fontWeight = FontWeight.Medium)
         }
     } else {
-        Button(onClick = onClick, modifier = buttonModifier, shape = RoundedCornerShape(20.dp)) {
+        Button(
+            onClick = onClick,
+            modifier = buttonModifier,
+            shape = RoundedCornerShape(20.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
+        ) {
             Icon(imageVector = icon, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
             Text(text = text, fontSize = 18.sp, fontWeight = FontWeight.Medium)
@@ -561,47 +607,47 @@ fun ConfettiEffect() {
         List(20) {
             ConfettiParticle(
                 startX = Random.nextFloat() * 1000f,
-                durationMs = Random.nextInt(2000, 4000),
-                delayMs = Random.nextInt(0, 500)
+                durationMs = Random.nextInt(2000, 3500),
+                delayMs = Random.nextInt(0, 400)
             )
         }
     }
 
-    val infiniteTransition = rememberInfiniteTransition(label = "Confetti")
-    val time by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(4000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "Time"
-    )
+    val elapsedAnim = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        elapsedAnim.animateTo(
+            targetValue = 4000f,
+            animationSpec = tween(durationMillis = 4000, easing = LinearEasing)
+        )
+    }
 
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        val currentTimeMs = time * 4000f
+    Canvas(
+        modifier = Modifier
+            .fillMaxSize()
+            .clearAndSetSemantics {}
+    ) {
+        val currentTimeMs = elapsedAnim.value
+        if (currentTimeMs >= 4000f) return@Canvas
 
         particles.forEach { particle ->
-            val localTime =
-                (currentTimeMs - particle.delayMs).coerceAtLeast(0f) % particle.durationMs
-            val progress = localTime / particle.durationMs
+            val localTime = currentTimeMs - particle.delayMs
+            if (localTime <= 0f || localTime >= particle.durationMs) return@forEach
 
-            val currentY = -20f + (size.height + 40f) * progress
+            val progress = localTime / particle.durationMs
+            val currentY = -20f + ((size.height + 40f) * progress)
             val rotation = 360f * progress
             val alpha = 1f - progress
 
-            if (progress > 0) {
-                drawContext.canvas.save()
-                drawContext.canvas.translate(particle.startX % size.width, currentY)
-                drawContext.canvas.rotate(rotation)
+            drawContext.canvas.save()
+            drawContext.canvas.translate(particle.startX % size.width, currentY)
+            drawContext.canvas.rotate(rotation)
 
-                drawCircle(
-                    color = particle.color.copy(alpha = alpha),
-                    radius = 5f
-                )
+            drawCircle(
+                color = particle.color.copy(alpha = alpha),
+                radius = 5f
+            )
 
-                drawContext.canvas.restore()
-            }
+            drawContext.canvas.restore()
         }
     }
 }

@@ -10,6 +10,9 @@
     <string name="error_server">Server error (%1$d). Please try again later.</string>
     <string name="error_database">Failed to save quiz score locally.</string>
     <string name="quiz_loading_questions">Loading questions...</string>
+    <string name="scoreboard_loading">Loading scores...</string>
+    <string name="a11y_correct_answer">Correct</string>
+    <string name="a11y_incorrect_answer">Incorrect</string>
 
     <!-- Home Screen -->
     <string name="home_hero_title">Quiz Master</string>
@@ -33,7 +36,7 @@
     <string name="quiz_question_counter">Question %1$d of %2$d</string>
     <string name="quiz_score_label">Score</string>
     <string name="quiz_exit_dialog_title">Exit quiz?</string>
-    <string name="quiz_exit_dialog_message">Your progress won\'t be saved.</string>
+    <string name="quiz_exit_dialog_message">Your progress won't be saved.</string>
     <string name="quiz_exit_dialog_exit">Exit</string>
     <string name="quiz_exit_dialog_resume">Resume</string>
     <string name="quiz_feedback_correct">Correct! +1 Point</string>

@@ -4,9 +4,9 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -48,11 +49,18 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import pl.pdgroup.quiz.ui.accessibility.rememberPrefersReducedMotion
 import pl.pdgroup.quiz.ui.adaptive.AdaptiveContainer
 import pl.pdgroup.quiz.ui.adaptive.FormFactorPreviews
 import pl.pdgroup.quiz.ui.theme.QuizTheme
@@ -177,7 +185,15 @@ fun HomeHeaderControls(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.End
     ) {
-        IconButton(onClick = onToggleTheme) {
+        IconButton(
+            onClick = onToggleTheme,
+            modifier = Modifier
+                .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                .semantics {
+                    role = Role.Switch
+                    toggleableState = ToggleableState(isDarkMode)
+                }
+        ) {
             Icon(
                 imageVector = if (isDarkMode) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
                 contentDescription = stringResource(Res.string.toggle_theme),
@@ -186,7 +202,15 @@ fun HomeHeaderControls(
             )
         }
         Spacer(modifier = Modifier.width(8.dp))
-        IconButton(onClick = onToggleContrast) {
+        IconButton(
+            onClick = onToggleContrast,
+            modifier = Modifier
+                .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                .semantics {
+                    role = Role.Switch
+                    toggleableState = ToggleableState(isHighContrast)
+                }
+        ) {
             Icon(
                 imageVector = Icons.Outlined.Contrast,
                 contentDescription = stringResource(Res.string.toggle_contrast),
@@ -199,20 +223,24 @@ fun HomeHeaderControls(
 
 @Composable
 fun HomeHeroSection(isCompactHeight: Boolean = false) {
+    val reduceMotion = rememberPrefersReducedMotion()
     val wiggleAnim = remember { Animatable(0f) }
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(3000)
+
+    LaunchedEffect(reduceMotion) {
+        if (!reduceMotion) {
+            delay(500)
             wiggleAnim.animateTo(10f, tween(100))
             wiggleAnim.animateTo(-10f, tween(100))
             wiggleAnim.animateTo(10f, tween(100))
             wiggleAnim.animateTo(0f, tween(100))
+        } else {
+            wiggleAnim.snapTo(0f)
         }
     }
 
     Icon(
         imageVector = Icons.AutoMirrored.Filled.List,
-        contentDescription = stringResource(Res.string.home_hero_title),
+        contentDescription = null,
         tint = MaterialTheme.colorScheme.primary,
         modifier = Modifier
             .size(if (isCompactHeight) 80.dp else 120.dp)
@@ -224,7 +252,8 @@ fun HomeHeroSection(isCompactHeight: Boolean = false) {
     Text(
         text = stringResource(Res.string.home_hero_title),
         style = if (isCompactHeight) MaterialTheme.typography.headlineLarge else MaterialTheme.typography.displayMedium,
-        textAlign = TextAlign.Center
+        textAlign = TextAlign.Center,
+        modifier = Modifier.semantics { heading() }
     )
 
     Spacer(modifier = Modifier.height(8.dp))
@@ -248,6 +277,7 @@ fun HomeActionCards(
         description = stringResource(Res.string.home_start_quiz_desc),
         icon = Icons.AutoMirrored.Filled.List,
         iconBgColor = MaterialTheme.colorScheme.primary,
+        iconContentColor = MaterialTheme.colorScheme.onPrimary,
         delayMs = 150,
         isCompact = isCompactHeight,
         onClick = onNavigateToSelection
@@ -260,6 +290,7 @@ fun HomeActionCards(
         description = stringResource(Res.string.home_scoreboard_desc),
         icon = Icons.Default.Leaderboard,
         iconBgColor = MaterialTheme.colorScheme.secondary,
+        iconContentColor = MaterialTheme.colorScheme.onSecondary,
         delayMs = 300,
         isCompact = isCompactHeight,
         onClick = onNavigateToScoreboard
@@ -268,10 +299,16 @@ fun HomeActionCards(
 
 @Composable
 fun HomeFooterInfo() {
-    val footerAlpha = remember { Animatable(0f) }
-    LaunchedEffect(Unit) {
-        delay(600)
-        footerAlpha.animateTo(1f, tween(400))
+    val reduceMotion = rememberPrefersReducedMotion()
+    val footerAlpha = remember { Animatable(if (reduceMotion) 1f else 0f) }
+
+    LaunchedEffect(reduceMotion) {
+        if (reduceMotion) {
+            footerAlpha.snapTo(1f)
+        } else {
+            delay(400)
+            footerAlpha.animateTo(1f, tween(300))
+        }
     }
 
     Text(
@@ -289,37 +326,46 @@ fun ActionCard(
     description: String,
     icon: ImageVector,
     iconBgColor: Color,
+    iconContentColor: Color = Color.White,
     delayMs: Long,
     isCompact: Boolean = false,
     onClick: () -> Unit
 ) {
-    val alphaAnim = remember { Animatable(0f) }
+    val reduceMotion = rememberPrefersReducedMotion()
+    val alphaAnim = remember { Animatable(if (reduceMotion) 1f else 0f) }
 
-    LaunchedEffect(Unit) {
-        delay(delayMs)
-        launch { alphaAnim.animateTo(1f, tween(500)) }
+    LaunchedEffect(reduceMotion) {
+        if (reduceMotion) {
+            alphaAnim.snapTo(1f)
+        } else {
+            delay(delayMs)
+            alphaAnim.animateTo(1f, tween(400))
+        }
     }
 
     val scale = remember { Animatable(1f) }
     val coroutineScope = rememberCoroutineScope()
-    val interactionSource = remember { MutableInteractionSource() }
+    val cardShape = RoundedCornerShape(16.dp)
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .alpha(alphaAnim.value)
             .scale(scale.value)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) {
-                coroutineScope.launch {
-                    scale.animateTo(0.95f, spring(stiffness = Spring.StiffnessHigh))
-                    scale.animateTo(1f, spring(stiffness = Spring.StiffnessMedium))
+            .clip(cardShape)
+            .clickable(role = Role.Button) {
+                if (reduceMotion) {
                     onClick()
+                } else {
+                    coroutineScope.launch {
+                        scale.animateTo(0.96f, spring(stiffness = Spring.StiffnessHigh))
+                        scale.animateTo(1f, spring(stiffness = Spring.StiffnessMedium))
+                        onClick()
+                    }
                 }
             },
-        shape = RoundedCornerShape(16.dp),
+        shape = cardShape,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
@@ -337,7 +383,7 @@ fun ActionCard(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = iconContentColor,
                     modifier = Modifier.size(if (isCompact) 28.dp else 36.dp)
                 )
             }
@@ -347,7 +393,8 @@ fun ActionCard(
             Column {
                 Text(
                     text = title,
-                    style = if (isCompact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium
+                    style = if (isCompact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
@@ -362,11 +409,24 @@ fun ActionCard(
 
 @FormFactorPreviews
 @Composable
-private fun HomeScreenPreview() {
+private fun HomeScreenLightPreview() {
     QuizTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
             HomeScreen(
                 state = HomeContract.State(isDarkMode = false, isHighContrast = false),
+                onIntent = {}
+            )
+        }
+    }
+}
+
+@FormFactorPreviews
+@Composable
+private fun HomeScreenDarkPreview() {
+    QuizTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            HomeScreen(
+                state = HomeContract.State(isDarkMode = true, isHighContrast = false),
                 onIntent = {}
             )
         }

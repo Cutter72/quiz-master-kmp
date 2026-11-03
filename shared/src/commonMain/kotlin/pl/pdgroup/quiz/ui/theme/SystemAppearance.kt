@@ -1,0 +1,6 @@
+package pl.pdgroup.quiz.ui.theme
+
+import androidx.compose.runtime.Composable
+
+@Composable
+expect fun SystemAppearance(isDark: Boolean)
