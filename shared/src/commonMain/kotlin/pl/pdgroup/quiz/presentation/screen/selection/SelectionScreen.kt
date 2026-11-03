@@ -47,14 +47,22 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -65,6 +73,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -86,6 +95,7 @@ import quizmaster.shared.generated.resources.selection_difficulty_title
 import quizmaster.shared.generated.resources.selection_header_title
 import quizmaster.shared.generated.resources.selection_info_questions_available
 import quizmaster.shared.generated.resources.selection_info_selected
+import kotlin.math.roundToInt
 
 @Composable
 fun SelectionScreen(
@@ -111,6 +121,14 @@ fun SelectionScreenContent(
     }
 
     val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+    val reduceMotion = rememberPrefersReducedMotion()
+    val density = LocalDensity.current
+
+    var scrollContentCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    var difficultySectionCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    var startButtonCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    var scrollJob by remember { mutableStateOf<Job?>(null) }
 
     AdaptiveContainer(modifier = Modifier.fillMaxSize()) { layoutInfo ->
         val categoryColumns = when {
@@ -119,6 +137,31 @@ fun SelectionScreenContent(
             else -> 3
         }
         val sectionSpacing = if (layoutInfo.isCompactHeight) 16.dp else 28.dp
+        val topPaddingPx = with(density) { layoutInfo.verticalContentPadding.roundToPx() }
+
+        val scrollToTarget: (() -> LayoutCoordinates?) -> Unit = { targetProvider ->
+            scrollJob?.cancel()
+            scrollJob = coroutineScope.launch {
+                repeat(3) { withFrameNanos { } }
+                val contentCoords = scrollContentCoords
+                val targetCoords = targetProvider()
+                if (
+                    contentCoords != null &&
+                    targetCoords != null &&
+                    contentCoords.isAttached &&
+                    targetCoords.isAttached
+                ) {
+                    val yInContent =
+                        contentCoords.localPositionOf(targetCoords, Offset.Zero).y.roundToInt()
+                    val targetScroll = (yInContent - topPaddingPx).coerceIn(0, scrollState.maxValue)
+                    if (reduceMotion) {
+                        scrollState.scrollTo(targetScroll)
+                    } else {
+                        scrollState.animateScrollTo(targetScroll)
+                    }
+                }
+            }
+        }
 
         if (layoutInfo.preferTwoPane) {
             Column(
@@ -126,6 +169,7 @@ fun SelectionScreenContent(
                     .widthIn(max = 1120.dp)
                     .fillMaxSize()
                     .verticalScroll(scrollState)
+                    .onGloballyPositioned { scrollContentCoords = it }
                     .padding(
                         horizontal = layoutInfo.horizontalContentPadding,
                         vertical = layoutInfo.verticalContentPadding
@@ -152,11 +196,8 @@ fun SelectionScreenContent(
                             maxItemsInEachRow = categoryColumns,
                             isCompact = layoutInfo.isCompactHeight,
                             onCategorySelected = {
-                                onIntent(
-                                    SelectionContract.Intent.SelectCategory(
-                                        it
-                                    )
-                                )
+                                onIntent(SelectionContract.Intent.SelectCategory(it))
+                                scrollToTarget { difficultySectionCoords }
                             }
                         )
                     }
@@ -167,13 +208,13 @@ fun SelectionScreenContent(
                         DifficultySelection(
                             difficulties = state.difficulties,
                             selectedDifficulty = state.selectedDifficulty,
+                            modifier = Modifier.onGloballyPositioned {
+                                difficultySectionCoords = it
+                            },
                             isCompact = layoutInfo.isCompactHeight,
                             onDifficultySelected = {
-                                onIntent(
-                                    SelectionContract.Intent.SelectDifficulty(
-                                        it
-                                    )
-                                )
+                                onIntent(SelectionContract.Intent.SelectDifficulty(it))
+                                scrollToTarget { startButtonCoords }
                             }
                         )
 
@@ -192,7 +233,8 @@ fun SelectionScreenContent(
                         StartQuizButton(
                             isStartEnabled = state.isStartEnabled,
                             isLoading = state.isLoading,
-                            onStartClick = { onIntent(SelectionContract.Intent.StartQuiz) }
+                            onStartClick = { onIntent(SelectionContract.Intent.StartQuiz) },
+                            modifier = Modifier.onGloballyPositioned { startButtonCoords = it }
                         )
                     }
                 }
@@ -205,6 +247,7 @@ fun SelectionScreenContent(
                     .widthIn(max = 840.dp)
                     .fillMaxSize()
                     .verticalScroll(scrollState)
+                    .onGloballyPositioned { scrollContentCoords = it }
                     .padding(
                         horizontal = layoutInfo.horizontalContentPadding,
                         vertical = layoutInfo.verticalContentPadding
@@ -221,7 +264,10 @@ fun SelectionScreenContent(
                     selectedCategory = state.selectedCategory,
                     maxItemsInEachRow = categoryColumns,
                     isCompact = layoutInfo.isCompactHeight,
-                    onCategorySelected = { onIntent(SelectionContract.Intent.SelectCategory(it)) }
+                    onCategorySelected = {
+                        onIntent(SelectionContract.Intent.SelectCategory(it))
+                        scrollToTarget { difficultySectionCoords }
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(sectionSpacing))
@@ -229,8 +275,12 @@ fun SelectionScreenContent(
                 DifficultySelection(
                     difficulties = state.difficulties,
                     selectedDifficulty = state.selectedDifficulty,
+                    modifier = Modifier.onGloballyPositioned { difficultySectionCoords = it },
                     isCompact = layoutInfo.isCompactHeight,
-                    onDifficultySelected = { onIntent(SelectionContract.Intent.SelectDifficulty(it)) }
+                    onDifficultySelected = {
+                        onIntent(SelectionContract.Intent.SelectDifficulty(it))
+                        scrollToTarget { startButtonCoords }
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(sectionSpacing))
@@ -248,7 +298,8 @@ fun SelectionScreenContent(
                 StartQuizButton(
                     isStartEnabled = state.isStartEnabled,
                     isLoading = state.isLoading,
-                    onStartClick = { onIntent(SelectionContract.Intent.StartQuiz) }
+                    onStartClick = { onIntent(SelectionContract.Intent.StartQuiz) },
+                    modifier = Modifier.onGloballyPositioned { startButtonCoords = it }
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -360,12 +411,14 @@ fun CategorySelection(
 fun DifficultySelection(
     difficulties: List<Difficulty>,
     selectedDifficulty: Difficulty?,
-    isCompact: Boolean = false,
-    onDifficultySelected: (Difficulty) -> Unit
+    onDifficultySelected: (Difficulty) -> Unit,
+    modifier: Modifier = Modifier,
+    isCompact: Boolean = false
 ) {
     SelectionCard(
         title = stringResource(Res.string.selection_difficulty_title),
         delayMs = 200,
+        modifier = modifier,
         isCompact = isCompact
     ) {
         val scrollState = rememberScrollState()
@@ -459,7 +512,8 @@ fun SelectionInfoPanel(
 fun StartQuizButton(
     isStartEnabled: Boolean,
     isLoading: Boolean,
-    onStartClick: () -> Unit
+    onStartClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val reduceMotion = rememberPrefersReducedMotion()
     val startButtonAlpha = remember { Animatable(if (reduceMotion) 1f else 0f) }
@@ -480,7 +534,7 @@ fun StartQuizButton(
     Button(
         onClick = onStartClick,
         enabled = isStartEnabled,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 64.dp)
             .alpha(startButtonAlpha.value)
@@ -512,6 +566,7 @@ fun StartQuizButton(
 fun SelectionCard(
     title: String,
     delayMs: Long,
+    modifier: Modifier = Modifier,
     isCompact: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -531,7 +586,7 @@ fun SelectionCard(
     }
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .alpha(alphaAnim.value)
             .offset(y = offsetYAnim.value.dp),
