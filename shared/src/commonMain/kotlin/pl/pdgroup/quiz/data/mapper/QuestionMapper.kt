@@ -7,12 +7,8 @@ import pl.pdgroup.quiz.domain.model.Question
 fun QuestionDto.toDomain(): Question {
     return Question(
         type = type,
-        difficulty = try {
-            Difficulty.valueOf(difficulty.uppercase())
-        } catch (e: Exception) {
-            Difficulty.EASY
-        },
-        category = category,
+        difficulty = Difficulty.fromKey(difficulty),
+        category = category.decodeHtmlEntities(),
         question = question.decodeHtmlEntities(),
         correctAnswer = correctAnswer.decodeHtmlEntities(),
         incorrectAnswers = incorrectAnswers.map { it.decodeHtmlEntities() }
@@ -21,11 +17,21 @@ fun QuestionDto.toDomain(): Question {
 
 fun String.decodeHtmlEntities(): String {
     if (!contains('&')) return this
-    var result = this
+    val numericRegex = Regex("&#(\\d+);")
+    var result = numericRegex.replace(this) { matchResult ->
+        val code = matchResult.groupValues[1].toIntOrNull()
+        if (code != null) code.toChar().toString() else matchResult.value
+    }
+    val hexRegex = Regex("&#x([0-9a-fA-F]+);")
+    result = hexRegex.replace(result) { matchResult ->
+        val code = matchResult.groupValues[1].toIntOrNull(16)
+        if (code != null) code.toChar().toString() else matchResult.value
+    }
+
+    return result
         .replace("&quot;", "\"")
         .replace("&#039;", "'")
         .replace("&#39;", "'")
-        .replace("&amp;", "&")
         .replace("&lt;", "<")
         .replace("&gt;", ">")
         .replace("&deg;", "°")
@@ -39,16 +45,5 @@ fun String.decodeHtmlEntities(): String {
         .replace("&hellip;", "…")
         .replace("&ndash;", "–")
         .replace("&mdash;", "—")
-
-    val numericRegex = Regex("&#(\\d+);")
-    result = numericRegex.replace(result) { matchResult ->
-        val code = matchResult.groupValues[1].toIntOrNull()
-        if (code != null) code.toChar().toString() else matchResult.value
-    }
-    val hexRegex = Regex("&#x([0-9a-fA-F]+);")
-    result = hexRegex.replace(result) { matchResult ->
-        val code = matchResult.groupValues[1].toIntOrNull(16)
-        if (code != null) code.toChar().toString() else matchResult.value
-    }
-    return result
+        .replace("&amp;", "&")
 }

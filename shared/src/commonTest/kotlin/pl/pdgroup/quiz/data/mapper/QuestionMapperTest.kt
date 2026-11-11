@@ -8,10 +8,10 @@ import kotlin.test.assertEquals
 class QuestionMapperTest {
 
     @Test
-    fun decodeHtmlEntities_decodes_common_entities() {
-        val encoded = "What is &quot;gravity&quot;? &#039;Test&#039; &amp; 100&deg;"
+    fun decodeHtmlEntities_decodes_common_entities_without_double_unescaping() {
+        val encoded = "What is &quot;gravity&quot;? &#039;Test&#039; &amp; 100&deg; &amp;lt;tag&amp;gt;"
         val decoded = encoded.decodeHtmlEntities()
-        assertEquals("What is \"gravity\"? 'Test' & 100°", decoded)
+        assertEquals("What is \"gravity\"? 'Test' & 100° &lt;tag&gt;", decoded)
     }
 
     @Test
@@ -29,7 +29,7 @@ class QuestionMapperTest {
 
         assertEquals("multiple", domain.type)
         assertEquals(Difficulty.MEDIUM, domain.difficulty)
-        assertEquals("Science & Nature", dto.category.decodeHtmlEntities())
+        assertEquals("Science & Nature", domain.category)
         assertEquals("Who wrote \"Hamlet\"?", domain.question)
         assertEquals("William Shakespeare", domain.correctAnswer)
         assertEquals(3, domain.incorrectAnswers.size)
