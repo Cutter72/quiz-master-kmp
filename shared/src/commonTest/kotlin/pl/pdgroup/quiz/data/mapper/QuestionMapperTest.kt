@@ -9,9 +9,9 @@ class QuestionMapperTest {
 
     @Test
     fun decodeHtmlEntities_decodes_common_entities_without_double_unescaping() {
-        val encoded = "What is &quot;gravity&quot;? &#039;Test&#039; &amp; 100&deg; &amp;lt;tag&amp;gt;"
+        val encoded = "What is &quot;gravity&quot;? &#039;Test&#039; &amp; 100&deg; &uuml; &euro; &amp;lt;tag&amp;gt;"
         val decoded = encoded.decodeHtmlEntities()
-        assertEquals("What is \"gravity\"? 'Test' & 100° &lt;tag&gt;", decoded)
+        assertEquals("What is \"gravity\"? 'Test' & 100° ü € &lt;tag&gt;", decoded)
     }
 
     @Test

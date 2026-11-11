@@ -77,6 +77,7 @@ kotlin {
 
             implementation(libs.androidx.room.runtime)
             implementation(libs.androidx.sqlite.bundled)
+            implementation(libs.ksoup.entities)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
