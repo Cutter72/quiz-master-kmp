@@ -71,6 +71,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -96,6 +98,7 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import pl.pdgroup.quizmaster.domain.model.Difficulty
@@ -188,10 +191,33 @@ fun QuizScreenContent(
     val primaryScrollState = rememberScrollState()
     val answersScrollState = rememberScrollState()
     val focusRequester = remember { FocusRequester() }
+    val reduceMotion = rememberPrefersReducedMotion()
 
     LaunchedEffect(state.currentQuestionIndex) {
         primaryScrollState.scrollTo(0)
         answersScrollState.scrollTo(0)
+    }
+
+    LaunchedEffect(state.isAnswerLocked, state.showCorrectAnswer) {
+        if (state.isAnswerLocked) {
+            withFrameNanos { }
+            snapshotFlow { primaryScrollState.maxValue }
+                .collectLatest { maxScroll ->
+                    if (maxScroll > 0) {
+                        if (reduceMotion) {
+                            primaryScrollState.scrollTo(maxScroll)
+                        } else {
+                            primaryScrollState.animateScrollTo(
+                                value = maxScroll,
+                                animationSpec = tween(
+                                    durationMillis = 350,
+                                    easing = LinearOutSlowInEasing
+                                )
+                            )
+                        }
+                    }
+                }
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -321,63 +347,56 @@ fun QuizScreenContent(
                 modifier = Modifier
                     .widthIn(max = 840.dp)
                     .fillMaxSize()
-                    .padding(horizontal = layoutInfo.horizontalContentPadding)
+                    .verticalScroll(primaryScrollState)
+                    .padding(
+                        start = layoutInfo.horizontalContentPadding,
+                        end = layoutInfo.horizontalContentPadding,
+                        top = layoutInfo.verticalContentPadding
+                    )
             ) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .verticalScroll(primaryScrollState)
-                        .padding(
-                            top = layoutInfo.verticalContentPadding,
-                            bottom = 16.dp
-                        )
-                ) {
-                    QuizHeader(
-                        currentQuestionIndex = state.currentQuestionIndex,
-                        totalQuestions = state.questions.size,
-                        score = state.score,
-                        onExitClick = { showExitDialog = true }
-                    )
+                QuizHeader(
+                    currentQuestionIndex = state.currentQuestionIndex,
+                    totalQuestions = state.questions.size,
+                    score = state.score,
+                    onExitClick = { showExitDialog = true }
+                )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                    QuizCategoryChips(
-                        category = state.category,
-                        difficulty = state.difficulty
-                    )
+                QuizCategoryChips(
+                    category = state.category,
+                    difficulty = state.difficulty
+                )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                    QuizProgressBar(
-                        currentQuestionIndex = state.currentQuestionIndex,
-                        totalQuestions = state.questions.size
-                    )
+                QuizProgressBar(
+                    currentQuestionIndex = state.currentQuestionIndex,
+                    totalQuestions = state.questions.size
+                )
 
-                    Spacer(modifier = Modifier.height(if (layoutInfo.isCompactHeight) 16.dp else 24.dp))
+                Spacer(modifier = Modifier.height(if (layoutInfo.isCompactHeight) 16.dp else 24.dp))
 
-                    QuizQuestionContent(
-                        state = state,
-                        columns = answerColumns,
-                        isCompact = layoutInfo.isCompactHeight,
-                        onIntent = onIntent
-                    )
-                }
+                QuizQuestionContent(
+                    state = state,
+                    columns = answerColumns,
+                    isCompact = layoutInfo.isCompactHeight,
+                    onIntent = onIntent
+                )
 
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    QuizResultFeedback(
-                        state = state,
-                        onIntent = onIntent
-                    )
+                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.weight(1f))
 
-                    QuizActionButtons(
-                        state = state,
-                        isCompact = layoutInfo.isCompactHeight,
-                        onIntent = onIntent
-                    )
-                }
+                QuizResultFeedback(
+                    state = state,
+                    onIntent = onIntent
+                )
+
+                QuizActionButtons(
+                    state = state,
+                    isCompact = layoutInfo.isCompactHeight,
+                    onIntent = onIntent
+                )
             }
         }
     }
