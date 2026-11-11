@@ -8,14 +8,34 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.viewmodel.koinViewModel
 import pl.pdgroup.quiz.presentation.MainViewModel
 import pl.pdgroup.quiz.presentation.navigation.AppNavigation
+import pl.pdgroup.quiz.presentation.screen.home.HomeContract
+import pl.pdgroup.quiz.presentation.screen.home.HomeScreen
 import pl.pdgroup.quiz.ui.theme.QuizTheme
 
 @Composable
 fun App() {
+    if (LocalInspectionMode.current) {
+        QuizTheme {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                Box(modifier = Modifier.fillMaxSize().safeDrawingPadding()) {
+                    HomeScreen(
+                        state = HomeContract.State(),
+                        onIntent = {}
+                    )
+                }
+            }
+        }
+        return
+    }
+
     val mainViewModel: MainViewModel = koinViewModel()
     val themeState by mainViewModel.themeState.collectAsStateWithLifecycle()
 

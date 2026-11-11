@@ -15,6 +15,7 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.module
+import org.koin.dsl.onClose
 import org.koin.mp.KoinPlatformTools
 import pl.pdgroup.quiz.data.local.AppDatabase
 import pl.pdgroup.quiz.data.local.ScoreDao
@@ -64,7 +65,7 @@ val appModule = module {
                 url("https://opentdb.com/")
             }
         }
-    }
+    } onClose { it?.close() }
 
     singleOf(::OpenTdbApiImpl) { bind<OpenTdbApi>() }
     singleOf(::getRoomDatabase)
