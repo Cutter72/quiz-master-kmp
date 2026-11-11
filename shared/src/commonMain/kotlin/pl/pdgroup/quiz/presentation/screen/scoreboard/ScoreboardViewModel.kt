@@ -12,11 +12,11 @@ import pl.pdgroup.quiz.presentation.mvi.BaseViewModel
 class ScoreboardViewModel(
     private val getScoresUseCase: GetScoresUseCase,
     private val getScoreStatisticsUseCase: GetScoreStatisticsUseCase
-) : BaseViewModel<ScoreboardContract.State, ScoreboardContract.Intent, ScoreboardContract.Effect>() {
+) : BaseViewModel<ScoreboardContract.State, ScoreboardContract.Intent, ScoreboardContract.Effect>(
+    initialState = ScoreboardContract.State()
+) {
 
     private var loadScoresJob: Job? = null
-
-    override fun createInitialState(): ScoreboardContract.State = ScoreboardContract.State()
 
     init {
         onIntent(ScoreboardContract.Intent.LoadScores)

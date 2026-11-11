@@ -13,30 +13,25 @@ import pl.pdgroup.quiz.presentation.navigation.ResultRoute as ResultNavRoute
 class ResultViewModel(
     savedStateHandle: SavedStateHandle,
     private val saveScoreUseCase: SaveScoreUseCase
-) : BaseViewModel<ResultContract.State, ResultContract.Intent, ResultContract.Effect>() {
-
-    private var isSavingScore = false
-
-    override fun createInitialState(): ResultContract.State = ResultContract.State()
-
-    init {
+) : BaseViewModel<ResultContract.State, ResultContract.Intent, ResultContract.Effect>(
+    initialState = run {
         val route = ResultNavRoute.from(savedStateHandle)
-        val category = QuizCategory.fromKey(route.categoryName)
-        val difficulty = Difficulty.fromKey(route.difficultyName)
         val score = route.score
         val total = route.total
         val percentage = if (total > 0) ((score.toFloat() / total) * 100).toInt() else 0
+        ResultContract.State(
+            category = QuizCategory.fromKey(route.categoryName),
+            difficulty = Difficulty.fromKey(route.difficultyName),
+            score = score,
+            totalQuestions = total,
+            percentage = percentage
+        )
+    }
+) {
 
-        setState {
-            copy(
-                category = category,
-                difficulty = difficulty,
-                score = score,
-                totalQuestions = total,
-                percentage = percentage
-            )
-        }
+    private var isSavingScore = false
 
+    init {
         viewModelScope.launch {
             persistScoreIfNeeded()
         }

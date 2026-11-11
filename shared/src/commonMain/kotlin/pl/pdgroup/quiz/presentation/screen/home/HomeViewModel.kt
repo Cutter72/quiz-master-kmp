@@ -9,9 +9,9 @@ import pl.pdgroup.quiz.presentation.mvi.BaseViewModel
 
 class HomeViewModel(
     private val settingsRepository: SettingsRepository
-) : BaseViewModel<HomeContract.State, HomeContract.Intent, HomeContract.Effect>() {
-
-    override fun createInitialState(): HomeContract.State = HomeContract.State()
+) : BaseViewModel<HomeContract.State, HomeContract.Intent, HomeContract.Effect>(
+    initialState = HomeContract.State()
+) {
 
     init {
         combine(

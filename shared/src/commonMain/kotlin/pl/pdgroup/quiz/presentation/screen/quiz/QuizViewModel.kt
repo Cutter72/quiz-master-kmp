@@ -17,17 +17,20 @@ import quizmaster.shared.generated.resources.quiz_no_questions_found
 class QuizViewModel(
     savedStateHandle: SavedStateHandle,
     private val getQuestionsUseCase: GetQuestionsUseCase
-) : BaseViewModel<QuizContract.State, QuizContract.Intent, QuizContract.Effect>() {
-
-    override fun createInitialState(): QuizContract.State = QuizContract.State()
+) : BaseViewModel<QuizContract.State, QuizContract.Intent, QuizContract.Effect>(
+    initialState = run {
+        val route = QuizNavRoute.from(savedStateHandle)
+        QuizContract.State(
+            category = QuizCategory.fromKey(route.categoryName),
+            difficulty = Difficulty.fromKey(route.difficultyName)
+        )
+    }
+) {
 
     init {
-        val route = QuizNavRoute.from(savedStateHandle)
-        val category = QuizCategory.fromKey(route.categoryName)
-        val difficulty = Difficulty.fromKey(route.difficultyName)
-        setState { copy(category = category, difficulty = difficulty) }
+        val initial = state.value
         viewModelScope.launch {
-            fetchQuestions(category, difficulty)
+            fetchQuestions(initial.category, initial.difficulty)
         }
     }
 

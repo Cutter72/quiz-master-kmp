@@ -8,9 +8,9 @@ import pl.pdgroup.quiz.presentation.mvi.BaseViewModel
 
 class SelectionViewModel(
     private val getQuestionsUseCase: GetQuestionsUseCase
-) : BaseViewModel<SelectionContract.State, SelectionContract.Intent, SelectionContract.Effect>() {
-
-    override fun createInitialState(): SelectionContract.State = SelectionContract.State()
+) : BaseViewModel<SelectionContract.State, SelectionContract.Intent, SelectionContract.Effect>(
+    initialState = SelectionContract.State()
+) {
 
     override fun onIntent(intent: SelectionContract.Intent) {
         when (intent) {
