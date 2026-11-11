@@ -51,6 +51,10 @@ Evaluate findings strictly according to these severity tiers:
     - Uncaught Ktor `ResponseException` / `kotlinx.io.IOException` or SQLite exceptions in the Data
       layer.
     - Leaking `NavController` into `ViewModel` or `FeatureScreen`, or non-`@Serializable` routes.
+  - Manual / ad-hoc data transformations, decoders, or parsers (e.g., custom `decodeHtmlEntities`
+    functions using regexes and chained `.replace(...)` calls, manual URL/Base64 encoding, or
+    string-slicing date parsers) instead of using a dedicated, spec-compliant KMP library (such as
+    `ksoup-entities`, Ktor URL codecs, `kotlin.io.encoding.Base64`, or `kotlinx-datetime`).
 - **[WARNING]**: Hurts testability, lifecycle safety, or Compose performance:
     - Violating the `FeatureRoute` (stateful) vs `FeatureScreen` (stateless) split.
     - Hardcoding `Dispatchers.IO` or `Dispatchers.Main` instead of injecting `DispatcherProvider`.

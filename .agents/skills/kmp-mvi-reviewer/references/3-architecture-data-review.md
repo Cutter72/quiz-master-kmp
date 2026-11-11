@@ -44,3 +44,22 @@
     - Is `RoomDatabase.Builder` configured with `.setDriver(BundledSQLiteDriver())` and
       `.setQueryCoroutineContext(dispatcherProvider.io)` (using an injected dispatcher rather than
       hardcoded `Dispatchers.IO`)?
+
+## 5. Manual / Ad-Hoc Data Transformations & Parsers (`[HIGH]`)
+
+- **What to check**:
+    - Do mappers or utility files implement manual string-replacement chains or custom regex parsers
+      for standard formats—such as a hand-rolled `String.decodeHtmlEntities()` with
+      `Regex("&#(\\d+);")`
+      and `.replace("&quot;", "\"")` chains, manual URL encoding/decoding, custom Base64 helpers, or
+      substring-based date/time parsing?
+- **Why**: Hand-rolled decoders and parsers only cover a fraction of the specification (e.g.,
+  missing named HTML5 entities or Astral plane Unicode code points above `0xFFFF` where
+  `Int.toChar()` truncates surrogate pairs), are prone to ordering and double-unescaping bugs, and
+  increase maintenance burden.
+- **Fix**: Replace custom transformation functions with a dedicated, spec-compliant Kotlin
+  Multiplatform library or standard library API:
+    - HTML entities: `com.mohamedrejeb.ksoup:ksoup-entities` (`KsoupEntities.decodeHtml(rawText)`)
+    - URL encoding/decoding: `io.ktor.http.encodeURLParameter` / `decodeURLQueryComponent`
+    - Base64: `kotlin.io.encoding.Base64`
+    - Dates & timestamps: `kotlinx.datetime` (`Instant.parse`, `LocalDateTime.Format`)

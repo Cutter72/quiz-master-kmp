@@ -217,11 +217,20 @@ fun ItemEntity.toDomain(): Item = Item(
 
 fun ItemDto.toDomain(): Item = Item(
     id = id,
-    title = title,
-    category = category,
+  title = KsoupEntities.decodeHtml(title),
+  category = KsoupEntities.decodeHtml(category),
     authorName = authorName
 )
 ```
+
+- **Never Hand-Roll Transformations in Mappers**:
+  - Do **not** write manual `.replace("&quot;", "\"")` chains, ad-hoc regexes for HTML entities
+    (e.g., `fun String.decodeHtmlEntities()`), custom URL encoders, or manual date-string
+    substring parsers inside mapper files.
+  - Always rely on a dedicated, spec-compliant multiplatform library or stdlib tool (for example,
+    `com.mohamedrejeb.ksoup:ksoup-entities` (`KsoupEntities.decodeHtml(...)`) for HTML entities,
+    Ktor's `decodeURLPart()` / `encodeURLParameter()` for URLs, `kotlin.io.encoding.Base64` for
+    Base64, and `kotlinx-datetime` for date/time parsing and formatting).
 
 ## 6. Koin Constructor DSL in `commonMain`
 

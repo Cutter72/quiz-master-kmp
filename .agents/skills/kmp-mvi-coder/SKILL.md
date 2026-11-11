@@ -36,6 +36,20 @@ so the codebase stays predictable, testable in `commonTest`, and free of platfor
     - Never hardcode `Dispatchers.IO` or `Dispatchers.Main` inside repositories, UseCases, or
       database builders. Always inject `DispatcherProvider` so `commonTest` can substitute
       `StandardTestDispatcher`.
+5. **No Manual / Ad-Hoc Data Transformations — Always Use Dedicated KMP Libraries**:
+    - Never write manual, ad-hoc string replacement chains or custom regex parsers for standard
+      encoding, decoding, or formatting tasks (e.g., never hand-roll `decodeHtmlEntities()` with
+      regexes and `.replace("&quot;", ...)` chains, manual URL encoding, custom Base64, or manual
+      ISO-8601 string slicing).
+    - Always add and use a dedicated, spec-compliant Kotlin Multiplatform library or standard API:
+        - **HTML entity decoding / sanitization**: `com.mohamedrejeb.ksoup:ksoup-entities`
+          (`KsoupEntities.decodeHtml(input)`)
+        - **URL encoding / decoding**: Ktor HTTP utilities (`encodeURLParameter()`,
+          `decodeURLQueryComponent()`)
+        - **Base64**: `kotlin.io.encoding.Base64`
+        - **Date / Time parsing & formatting**: `kotlinx-datetime` (`Instant`, `LocalDateTime`,
+          `DateTimeComponents.Formats`)
+        - **Serialization**: `kotlinx-serialization`
 
 ## 2. Reference Routing Guide (Read Before Coding)
 
@@ -63,7 +77,9 @@ Whenever you generate or modify code with this skill, always provide:
 
 1. Clean Kotlin files organized by layer (`data`, `domain`, `presentation`) with zero `java.*`/
    `android.*`/`platform.*` imports in `commonMain`.
-2. Explicit mapper extension functions (`toDomain()`, `toEntity()`, `toUiModel()`).
+2. Explicit mapper extension functions (`toDomain()`, `toEntity()`, `toUiModel()`) that delegate any
+   content decoding/formatting (such as HTML entity unescaping) to dedicated KMP libraries rather
+   than manual `.replace()` / regex chains.
 3. Corresponding `<string name="...">...</string>` XML entries for
    `commonMain/composeResources/values/strings.xml` whenever new user-facing text is added.
 4. Koin DI module registrations (`viewModelOf`, `factoryOf`, `singleOf`) for all newly introduced
