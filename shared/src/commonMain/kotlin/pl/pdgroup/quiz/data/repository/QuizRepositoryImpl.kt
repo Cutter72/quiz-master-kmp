@@ -9,9 +9,9 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import pl.pdgroup.quiz.data.local.ScoreDao
-import pl.pdgroup.quiz.data.local.ScoreEntity
 import pl.pdgroup.quiz.data.mapper.CategoryMapper
 import pl.pdgroup.quiz.data.mapper.toDomain
+import pl.pdgroup.quiz.data.mapper.toEntity
 import pl.pdgroup.quiz.data.remote.api.OpenTdbApi
 import pl.pdgroup.quiz.domain.model.Difficulty
 import pl.pdgroup.quiz.domain.model.Question
@@ -130,31 +130,14 @@ class QuizRepositoryImpl(
 
     override fun getScores(): Flow<List<QuizScore>> {
         return scoreDao.getAllScores().map { entities ->
-            entities.map { entity ->
-                QuizScore(
-                    category = QuizCategory.fromKey(entity.category),
-                    difficulty = entity.difficulty,
-                    score = entity.score,
-                    totalQuestions = entity.totalQuestions,
-                    date = entity.date,
-                    id = entity.id
-                )
-            }
+            entities.map { entity -> entity.toDomain() }
         }
     }
 
     override suspend fun saveScore(score: QuizScore): Result<Unit> {
         return withContext(dispatcherProvider.io) {
             try {
-                scoreDao.insertScore(
-                    ScoreEntity(
-                        category = score.category.name,
-                        difficulty = score.difficulty,
-                        score = score.score,
-                        totalQuestions = score.totalQuestions,
-                        date = score.date
-                    )
-                )
+                scoreDao.insertScore(score.toEntity())
                 Result.success(Unit)
             } catch (e: CancellationException) {
                 throw e

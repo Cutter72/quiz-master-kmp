@@ -50,7 +50,7 @@ class QuizRepositoryImplTest {
         assertEquals(1, fakeScoreDao.insertedScores.size)
         val entity = fakeScoreDao.insertedScores.first()
         assertEquals(QuizCategory.HISTORY.name, entity.category)
-        assertEquals(Difficulty.HARD, entity.difficulty)
+        assertEquals(Difficulty.HARD.name, entity.difficulty)
         assertEquals(9, entity.score)
         assertEquals(10, entity.totalQuestions)
         assertEquals("2023-11-01T12:00:00Z", entity.date)
@@ -59,8 +59,8 @@ class QuizRepositoryImplTest {
     @Test
     fun getScores_maps_entities_to_domain_models_correctly() = runTest {
         val entities = listOf(
-            ScoreEntity(1, "Sports", Difficulty.EASY, 5, 10, "2023-10-01T10:00:00Z"),
-            ScoreEntity(2, "SCIENCE_AND_NATURE", Difficulty.MEDIUM, 8, 10, "2023-10-02T10:00:00Z")
+            ScoreEntity(1, "Sports", Difficulty.EASY.name, 5, 10, "2023-10-01T10:00:00Z"),
+            ScoreEntity(2, "SCIENCE_AND_NATURE", Difficulty.MEDIUM.name, 8, 10, "2023-10-02T10:00:00Z")
         )
         fakeScoreDao.scoresToReturn = entities
 
