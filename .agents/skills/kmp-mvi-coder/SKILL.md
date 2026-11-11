@@ -1,199 +1,70 @@
 ---
 name: kmp-mvi-coder
-description: Use when implementing features, Compose Multiplatform UI, MVI ViewModels, Type-Safe Navigation, Koin modules, Ktor APIs, or Room KMP databases in commonMain.
+description: Implement Kotlin Multiplatform (KMP) and Compose Multiplatform (CMP) features in commonMain using MVI architecture, Type-Safe Navigation, Koin DI, Ktor, and Room KMP. Make sure to use this skill whenever the user asks to build a new screen, create UI components, implement a ViewModel, wire up navigation, fetch data from an API, save data locally in Room, write expect/actual platform bridges, or fix UI/state logic in this KMP project—even if they don't explicitly mention MVI, Koin, Room, or Ktor.
 ---
 
-# KMP + CMP + MVI + Koin + Ktor + Room Engineering Skill
+# KMP + CMP + MVI Engineering Skill
 
-## 1. Canonical MVI Pattern & Compose Multiplatform UI (`commonMain`)
+You are building a shared Kotlin Multiplatform application targeting Android and iOS where 100% of
+the UI is shared in `commonMain` using Compose Multiplatform. Follow these architectural boundaries
+so the codebase stays predictable, testable in `commonTest`, and free of platform leaks.
 
-Every screen in `commonMain` MUST be split into:
+## 1. Core Architectural Boundaries
 
-1. **`FeatureContract`:** Contains `@Immutable data class State`, `sealed interface Intent`, and
-   `sealed interface Effect`.
-2. **`FeatureViewModel`:** Extends `androidx.lifecycle.ViewModel`. Exposes ONLY
-   `state: StateFlow<State>`, `effect: Flow<Effect>` (backed by `Channel(Channel.BUFFERED)`), and
-   `fun onIntent(intent: Intent)`. Always update state atomically via
-   `_state.update { it.copy(...) }`.
-3. **`FeatureRoute` (Stateful Composable):** Injects `koinViewModel()`, collects `state` via
-   `collectAsStateWithLifecycle()`, handles `effect` inside `LaunchedEffect(Unit)`, and triggers
-   navigation callbacks.
-4. **`FeatureScreen` (Stateless Composable):** Takes ONLY `state: FeatureContract.State` and
-   `onIntent: (FeatureContract.Intent) -> Unit`. Zero `ViewModel` or `NavController` references
-   inside `FeatureScreen` (ensures easy `@Preview` and testing).
+1. **Zero Platform Leaks in `commonMain`**:
+    - Never import `java.*`, `android.*`, or `platform.*` packages inside `commonMain`. Always use
+      multiplatform equivalents (`kotlinx.io.IOException`, `kotlin.uuid.Uuid`,
+      `kotlinx.datetime.*`).
+2. **Strict Layer Separation (`data` -> `domain` -> `presentation`)**:
+    - **Data Layer**: Holds `@Serializable` Ktor DTOs, `@Entity` Room classes, DAOs, API services,
+      and repository implementations. Keep DTOs and Room entities strictly inside the data
+      layer—leaking them to Domain or UI couples rendering to backend/storage schemas and breaks
+      Compose compiler stability.
+    - **Domain Layer**: Pure Kotlin in `commonMain`. Contains domain models (`Item`), repository
+      interfaces, typed `DomainError` hierarchies, and UseCases returning `Result<T>` or `Flow<T>`.
+    - **Presentation & UI Layer**: Uses a 4-part MVI structure (`FeatureContract`,
+      `FeatureViewModel`, `FeatureRoute`, `FeatureScreen`) operating exclusively on `@Immutable` UI
+      models (`*UiModel`).
+3. **Zero Hardcoded User-Facing Strings**:
+    - Store all user-facing text in `commonMain/composeResources/values/strings.xml`.
+    - Pass `StringResource` or `UiText` in MVI `State` and `Effect` instead of raw string literals
+      so the UI reacts properly to locale changes and remains testable.
+4. **Unidirectional Data Flow & Injected Dispatchers**:
+    - UI emits `Intent` -> `ViewModel` processes via `onIntent(intent)` -> updates
+      `StateFlow<State>` atomically via `_state.update { it.copy(...) }` or sends one-off events via
+      buffered `Channel<Effect>`.
+    - Never hardcode `Dispatchers.IO` or `Dispatchers.Main` inside repositories, UseCases, or
+      database builders. Always inject `DispatcherProvider` so `commonTest` can substitute
+      `StandardTestDispatcher`.
 
-### Reference Implementation (Contract, ViewModel, Route & Screen)
+## 2. Reference Routing Guide (Read Before Coding)
 
-```kotlin
-import org.jetbrains.compose.resources.StringResource
-import org.jetbrains.compose.resources.getString
-import org.jetbrains.compose.resources.stringResource
+To keep context lean and apply exact project templates, read only the reference file (s) matching
+the current task before generating code:
 
-@Immutable
-object FeatureContract {
-    @Immutable
-    data class State(
-        val isLoading: Boolean = false,
-        val items: List<ItemUiModel> = emptyList(),
-        val errorRes: StringResource? = null
-    )
+- **Task involves Compose UI (`FeatureRoute`, `FeatureScreen`), `@Preview`, `composeResources` (
+  `strings.xml`, `UiText`), or Type-Safe Navigation**:
+  -> Read `references/1-ui-compose-multiplatform.md`
+- **Task involves MVI state management (`FeatureContract`, `FeatureViewModel`), `StateFlow`/
+  `Channel`, `SavedStateHandle`, or UI-model mapping**:
+  -> Read `references/2-presentation-mvi.md`
+- **Task involves UseCases, Domain models, `DispatcherProvider`, Ktor API calls, Room KMP database,
+  Repository implementations, or Koin DI modules in `commonMain`**:
+  -> Read `references/3-domain-and-data.md`
+- **Task involves `androidMain` / `iosMain` bindings, `expect/actual` declarations, platform Koin
+  modules (`OkHttp`, `Darwin`, `RoomDatabase.Builder`), or native capabilities**:
+  -> Read `references/4-platform-expect-actual.md`
 
-    sealed interface Intent {
-        data object OnRefresh : Intent
-        data class OnItemClicked(val id: String) : Intent
-    }
+*(Note: For a full end-to-end vertical feature slice, read references `1`, `2`, and `3` together).*
 
-    sealed interface Effect {
-        data class NavigateToDetails(val id: String) : Effect
-        data class ShowSnackbar(val messageRes: StringResource) : Effect
-    }
-}
+## 3. Expected Output Checklist
 
-class FeatureViewModel(
-    private val getItemsUseCase: GetItemsUseCase
-) : ViewModel() {
+Whenever you generate or modify code with this skill, always provide:
 
-    private val _state = MutableStateFlow(FeatureContract.State())
-    val state: StateFlow<FeatureContract.State> = _state.asStateFlow()
-
-    private val _effect = Channel<FeatureContract.Effect>(Channel.BUFFERED)
-    val effect: Flow<FeatureContract.Effect> = _effect.receiveAsFlow()
-
-    fun onIntent(intent: FeatureContract.Intent) {
-        when (intent) {
-            FeatureContract.Intent.OnRefresh -> loadItems()
-            is FeatureContract.Intent.OnItemClicked -> sendEffect(
-                FeatureContract.Effect.NavigateToDetails(intent.id)
-            )
-        }
-    }
-
-    private fun loadItems() {
-        viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, errorRes = null) }
-            getItemsUseCase()
-                .onSuccess { items ->
-                    _state.update { it.copy(isLoading = false, items = items) }
-                }
-                .onFailure {
-                    _state.update {
-                        it.copy(isLoading = false, errorRes = Res.string.error_loading_items)
-                    }
-                    sendEffect(FeatureContract.Effect.ShowSnackbar(Res.string.error_sync_failed))
-                }
-        }
-    }
-
-    private fun sendEffect(effect: FeatureContract.Effect) {
-        viewModelScope.launch { _effect.send(effect) }
-    }
-}
-
-@Composable
-fun FeatureRoute(
-    onNavigateToDetails: (String) -> Unit,
-    onShowSnackbar: suspend (String) -> Unit,
-    viewModel: FeatureViewModel = koinViewModel()
-) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
-
-    LaunchedEffect(Unit) {
-        viewModel.effect.collect { effect ->
-            when (effect) {
-                is FeatureContract.Effect.NavigateToDetails -> onNavigateToDetails(effect.id)
-                is FeatureContract.Effect.ShowSnackbar -> {
-                    onShowSnackbar(getString(effect.messageRes))
-                }
-            }
-        }
-    }
-
-    FeatureScreen(
-        state = state,
-        onIntent = viewModel::onIntent
-    )
-}
-
-@Composable
-fun FeatureScreen(
-    state: FeatureContract.State,
-    onIntent: (FeatureContract.Intent) -> Unit
-) {
-    // Pure Stateless Compose Multiplatform UI in commonMain.
-    // Always resolve user-facing text via stringResource(Res.string.your_key)
-    state.errorRes?.let { errorRes ->
-        Text(text = stringResource(errorRes))
-    }
-}
-```
-
-## 2. Localization & String Resources (`composeResources`)
-
-- **Zero Hardcoded Strings Rule (CRITICAL):** NEVER hardcode user-facing strings in `@Composable`
-  functions (`Text("...")`, `placeholder`, `contentDescription`) or inside `ViewModel`s (`State`,
-  `Effect`).
-- **Compose Multiplatform Resources:**
-    - Store all user-facing strings in `commonMain/composeResources/values/strings.xml`.
-    - In `@Composable` UI (`FeatureScreen`), always resolve text using
-      `stringResource(Res.string.key)` or `pluralStringResource(Res.plurals.key, count)`.
-    - In non-composable scopes (such as `LaunchedEffect` in `FeatureRoute`), resolve
-      `StringResource` using the suspend function `getString(Res.string.key)`.
-- **Strings in MVI `State` & `Effect`:**
-    - Pass `StringResource` (from `org.jetbrains.compose.resources.StringResource`) in
-      `FeatureContract.State` and `FeatureContract.Effect` instead of raw hardcoded `String`
-      literals.
-    - When mixed dynamic/formatted strings are required (e.g., `StringResource` with format
-      arguments or server-provided text), use a sealed `UiText` wrapper
-      (`UiText.Resource(val resId: StringResource, val args: List<Any>)` and
-      `UiText.Dynamic(val value: String)`).
-- **Resource Completeness:** Whenever adding new UI elements, empty states, dialogs, or error
-  messages, always provide the corresponding `<string name="...">...</string>` entries for
-  `strings.xml`.
-
-## 3. Type-Safe Navigation (`androidx.navigation.compose`)
-
-- Define all destinations as `@Serializable` objects or data classes in `commonMain`:
-
-```kotlin
-@Serializable
-data object FeatureListRoute
-@Serializable
-data class FeatureDetailsRoute(val id: String)
-```
-
-- Register destinations inside `NavHost` using `composable<FeatureListRoute> { ... }` and extract
-  arguments via `backStackEntry.toRoute<FeatureDetailsRoute>()` (or
-  `SavedStateHandle.toRoute<FeatureDetailsRoute>()` inside `ViewModel`).
-- Never pass `NavHostController` down into `ViewModel` or `FeatureScreen`; expose navigation lambdas
-  (`onNavigateToDetails`) from `FeatureRoute` to the `NavGraphBuilder`.
-
-## 4. Koin Multiplatform DI Rules
-
-- Prefer Constructor DSL: `singleOf(::RepoImpl) { bind<Repo>() }`, `factoryOf(::GetItemsUseCase)`,
-  `viewModelOf(::FeatureViewModel)`.
-- Use `expect val platformModule: Module` in `commonMain` and `actual val platformModule: Module` in
-  `androidMain` / `iosMain` to provide platform-specific bindings (`RoomDatabase.Builder`, Ktor
-  `HttpClientEngine`, DataStore paths).
-- Initialize Koin via `KoinApplication` in Compose or a shared `initKoin()` function accepting
-  platform config on Android (`androidContext(this)`).
-
-## 5. Data Layer: Ktor Client & Room KMP
-
-- **Ktor Client (`commonMain`):**
-    - Configure `HttpClient` in `commonMain` with `ContentNegotiation`
-      (`json(Json { ignoreUnknownKeys = true; isLenient = true })`), `HttpTimeout`, and
-      `DefaultRequest`.
-    - Inject platform engines (`OkHttp` in `androidMain`, `Darwin` in `iosMain`) via Koin
-      `platformModule`.
-    - Wrap all network calls in a safe helper catching `ResponseException` and `IOException`,
-      mapping them to typed Domain errors (`Result<T>`).
-- **Room KMP (`commonMain`):**
-    - Define `@Entity`, `@Dao` (using `suspend` functions for writes and `Flow<List<T>>` for
-      reactive reads), and `@Database` inside `commonMain`.
-    - Annotate `@Database` with `@ConstructedBy(AppDatabaseConstructor::class)` and declare
-      `expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase>`.
-    - Provide platform `RoomDatabase.Builder<AppDatabase>` in `androidMain` and `iosMain`, and build
-      the instance in `commonMain` configured with `.setDriver(BundledSQLiteDriver())` and
-      `.setQueryCoroutineContext(dispatcherProvider.io)`.
-- **Strict Mapping:** Never expose `@Serializable` Ktor DTOs or `@Entity` Room classes to Domain or
-  Presentation. Always map `Dto -> Entity -> DomainModel -> UiModel`.
+1. Clean Kotlin files organized by layer (`data`, `domain`, `presentation`) with zero `java.*`/
+   `android.*`/`platform.*` imports in `commonMain`.
+2. Explicit mapper extension functions (`toDomain()`, `toEntity()`, `toUiModel()`).
+3. Corresponding `<string name="...">...</string>` XML entries for
+   `commonMain/composeResources/values/strings.xml` whenever new user-facing text is added.
+4. Koin DI module registrations (`viewModelOf`, `factoryOf`, `singleOf`) for all newly introduced
+   classes.
