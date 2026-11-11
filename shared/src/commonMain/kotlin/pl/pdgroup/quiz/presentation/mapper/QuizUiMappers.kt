@@ -1,7 +1,9 @@
 package pl.pdgroup.quiz.presentation.mapper
 
 import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.StringResource
 import pl.pdgroup.quiz.domain.model.Difficulty
@@ -59,9 +61,13 @@ fun QuizScore.toUiModel(fallbackId: Int = 0): ScoreUiModel {
         0
     }
     val localDate = runCatching {
-        Instant.parse(date).toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
+        Instant.parse(date)
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .date
+            .format(LocalDate.Formats.ISO)
     }.getOrElse {
-        date.take(10)
+        runCatching { LocalDate.parse(date).format(LocalDate.Formats.ISO) }
+            .getOrDefault(date)
     }
     return ScoreUiModel(
         id = if (id != 0) id else fallbackId,
