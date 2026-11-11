@@ -3,12 +3,16 @@ package pl.pdgroup.quiz.presentation.screen.selection
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -633,8 +637,12 @@ fun SelectableChip(
         }
     }
 
-    val coroutineScope = rememberCoroutineScope()
-    val scaleAnim = remember { Animatable(1f) }
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (isPressed && !reduceMotion) 0.96f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+    )
     val chipShape = RoundedCornerShape(8.dp)
     val borderColor = if (isSelected) selectedColor else MaterialTheme.colorScheme.outline
 
@@ -642,7 +650,7 @@ fun SelectableChip(
         modifier = modifier
             .heightIn(min = 56.dp)
             .alpha(alphaAnim.value)
-            .scale(scaleAnimEntry.value * scaleAnim.value)
+            .scale(scaleAnimEntry.value * pressScale)
             .clip(chipShape)
             .background(
                 color = if (isSelected) selectedColor else MaterialTheme.colorScheme.surfaceVariant,
@@ -655,18 +663,10 @@ fun SelectableChip(
             )
             .selectable(
                 selected = isSelected,
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
                 role = Role.RadioButton,
-                onClick = {
-                    if (reduceMotion) {
-                        onClick()
-                    } else {
-                        coroutineScope.launch {
-                            scaleAnim.animateTo(0.96f, spring(stiffness = Spring.StiffnessHigh))
-                            scaleAnim.animateTo(1f, spring(stiffness = Spring.StiffnessMedium))
-                            onClick()
-                        }
-                    }
-                }
+                onClick = onClick
             )
             .padding(horizontal = 12.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center
