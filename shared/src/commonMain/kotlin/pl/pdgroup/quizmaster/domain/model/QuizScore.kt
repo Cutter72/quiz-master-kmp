@@ -1,0 +1,10 @@
+package pl.pdgroup.quizmaster.domain.model
+
+data class QuizScore(
+    val category: QuizCategory,
+    val difficulty: Difficulty,
+    val score: Int,
+    val totalQuestions: Int,
+    val date: String,
+    val id: Int = 0
+)
