@@ -21,9 +21,22 @@ class SettingsRepositoryImpl(
         }
     }
 
+    override suspend fun toggleDarkMode() {
+        withContext(dispatcherProvider.io) {
+            settingsManager.toggleDarkMode()
+        }
+    }
+
     override suspend fun setHighContrast(enabled: Boolean) {
         withContext(dispatcherProvider.io) {
             settingsManager.setHighContrast(enabled)
         }
     }
+
+    override suspend fun toggleHighContrast() {
+        withContext(dispatcherProvider.io) {
+            settingsManager.toggleHighContrast()
+        }
+    }
 }
+

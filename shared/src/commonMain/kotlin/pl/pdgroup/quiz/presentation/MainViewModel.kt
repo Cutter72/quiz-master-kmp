@@ -29,15 +29,14 @@ class MainViewModel(
 
     fun toggleTheme() {
         viewModelScope.launch {
-            val current = themeState.value.isDarkMode
-            settingsRepository.setDarkMode(!current)
+            settingsRepository.toggleDarkMode()
         }
     }
 
     fun toggleContrast() {
         viewModelScope.launch {
-            val current = themeState.value.isHighContrast
-            settingsRepository.setHighContrast(!current)
+            settingsRepository.toggleHighContrast()
         }
     }
 }
+

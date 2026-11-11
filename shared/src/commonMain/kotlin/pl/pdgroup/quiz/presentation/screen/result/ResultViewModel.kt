@@ -29,8 +29,6 @@ class ResultViewModel(
     }
 ) {
 
-    private var isSavingScore = false
-
     init {
         viewModelScope.launch {
             persistScoreIfNeeded()
@@ -38,20 +36,25 @@ class ResultViewModel(
     }
 
     private suspend fun persistScoreIfNeeded() {
-        val current = state.value
-        if (current.isSaved || isSavingScore) return
-        isSavingScore = true
-        try {
-            saveScoreUseCase(current.category, current.difficulty, current.score, current.totalQuestions)
-                .onSuccess {
-                    setState { copy(isSaved = true, saveError = null) }
-                }
-                .onFailure { e ->
-                    setState { copy(saveError = e.toUiText()) }
-                }
-        } finally {
-            isSavingScore = false
+        var shouldSave = false
+        setState {
+            if (isSaved || isSaving) {
+                this
+            } else {
+                shouldSave = true
+                copy(isSaving = true, saveError = null)
+            }
         }
+        if (!shouldSave) return
+
+        val current = state.value
+        saveScoreUseCase(current.category, current.difficulty, current.score, current.totalQuestions)
+            .onSuccess {
+                setState { copy(isSaved = true, isSaving = false, saveError = null) }
+            }
+            .onFailure { e ->
+                setState { copy(isSaving = false, saveError = e.toUiText()) }
+            }
     }
 
     override fun onIntent(intent: ResultContract.Intent) {

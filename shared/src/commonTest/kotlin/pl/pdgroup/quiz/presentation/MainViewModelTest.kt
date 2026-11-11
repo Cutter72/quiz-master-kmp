@@ -75,7 +75,16 @@ class FakeSettingsRepository : SettingsRepository {
         _isDarkMode.value = enabled
     }
 
+    override suspend fun toggleDarkMode() {
+        _isDarkMode.value = !_isDarkMode.value
+    }
+
     override suspend fun setHighContrast(enabled: Boolean) {
         _isHighContrast.value = enabled
     }
+
+    override suspend fun toggleHighContrast() {
+        _isHighContrast.value = !_isHighContrast.value
+    }
 }
+

@@ -179,6 +179,7 @@ fun ResultScreenContent(
                         state.saveError?.let { error ->
                             ResultSaveErrorBanner(
                                 error = error,
+                                isSaving = state.isSaving,
                                 onRetry = { onIntent(ResultContract.Intent.RetrySaveScore) }
                             )
                         }
@@ -227,6 +228,7 @@ fun ResultScreenContent(
                     state.saveError?.let { error ->
                         ResultSaveErrorBanner(
                             error = error,
+                            isSaving = state.isSaving,
                             onRetry = { onIntent(ResultContract.Intent.RetrySaveScore) }
                         )
                     }
@@ -249,7 +251,8 @@ fun ResultScreenContent(
 @Composable
 fun ResultSaveErrorBanner(
     error: UiText,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    isSaving: Boolean = false
 ) {
     Card(
         modifier = Modifier
@@ -279,6 +282,7 @@ fun ResultSaveErrorBanner(
             )
             OutlinedButton(
                 onClick = onRetry,
+                enabled = !isSaving,
                 modifier = Modifier.heightIn(min = 48.dp),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
             ) {

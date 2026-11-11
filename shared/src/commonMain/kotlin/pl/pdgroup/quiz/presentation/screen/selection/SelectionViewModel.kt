@@ -15,13 +15,21 @@ class SelectionViewModel(
     override fun onIntent(intent: SelectionContract.Intent) {
         when (intent) {
             is SelectionContract.Intent.SelectCategory -> {
-                setState { copy(selectedCategory = intent.category) }
-                updateAvailableQuestions()
+                setState {
+                    copy(
+                        selectedCategory = intent.category,
+                        availableQuestionsCount = if (selectedDifficulty != null) 7 else 0
+                    )
+                }
             }
 
             is SelectionContract.Intent.SelectDifficulty -> {
-                setState { copy(selectedDifficulty = intent.difficulty) }
-                updateAvailableQuestions()
+                setState {
+                    copy(
+                        selectedDifficulty = intent.difficulty,
+                        availableQuestionsCount = if (selectedCategory != null) 7 else 0
+                    )
+                }
             }
 
             SelectionContract.Intent.StartQuiz -> {
@@ -51,13 +59,5 @@ class SelectionViewModel(
             }
         }
     }
-
-    private fun updateAvailableQuestions() {
-        val currentState = state.value
-        if (currentState.selectedCategory != null && currentState.selectedDifficulty != null) {
-            setState { copy(availableQuestionsCount = 7) }
-        } else {
-            setState { copy(availableQuestionsCount = 0) }
-        }
-    }
 }
+

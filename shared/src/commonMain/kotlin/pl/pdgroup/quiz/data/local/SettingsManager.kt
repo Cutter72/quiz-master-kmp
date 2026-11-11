@@ -27,9 +27,24 @@ class SettingsManager(
         }
     }
 
+    suspend fun toggleDarkMode() {
+        dataStore.edit { preferences ->
+            val current = preferences[isDarkModeKey] ?: false
+            preferences[isDarkModeKey] = !current
+        }
+    }
+
     suspend fun setHighContrast(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[isHighContrastKey] = enabled
         }
     }
+
+    suspend fun toggleHighContrast() {
+        dataStore.edit { preferences ->
+            val current = preferences[isHighContrastKey] ?: false
+            preferences[isHighContrastKey] = !current
+        }
+    }
 }
+

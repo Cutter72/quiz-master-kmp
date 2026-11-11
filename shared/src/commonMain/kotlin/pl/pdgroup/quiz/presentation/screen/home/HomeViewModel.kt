@@ -26,12 +26,12 @@ class HomeViewModel(
         when (intent) {
             HomeContract.Intent.ToggleTheme -> {
                 viewModelScope.launch {
-                    settingsRepository.setDarkMode(!state.value.isDarkMode)
+                    settingsRepository.toggleDarkMode()
                 }
             }
             HomeContract.Intent.ToggleContrast -> {
                 viewModelScope.launch {
-                    settingsRepository.setHighContrast(!state.value.isHighContrast)
+                    settingsRepository.toggleHighContrast()
                 }
             }
             HomeContract.Intent.NavigateToSelection -> setEffect { HomeContract.Effect.NavigateToSelection }
@@ -39,3 +39,4 @@ class HomeViewModel(
         }
     }
 }
+

@@ -18,6 +18,7 @@ object ResultContract {
         val totalQuestions: Int = 0,
         val percentage: Int = 0,
         val isSaved: Boolean = false,
+        val isSaving: Boolean = false,
         val saveError: UiText? = null
     ) : ViewState
 

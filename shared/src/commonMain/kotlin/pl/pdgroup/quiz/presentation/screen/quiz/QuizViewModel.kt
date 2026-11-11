@@ -78,14 +78,11 @@ class QuizViewModel(
             }
 
             is QuizContract.Intent.SelectAnswer -> {
-                val currentState = state.value
-                if (currentState.isAnswerLocked || currentState.questions.isEmpty()) return
-
-                val currentQuestion = currentState.questions[currentState.currentQuestionIndex]
-                val isCorrect = intent.answer == currentQuestion.correctAnswer
-                val newScore = if (isCorrect) currentState.score + 1 else currentState.score
-
                 setState {
+                    if (isAnswerLocked || questions.isEmpty()) return@setState this
+                    val currentQuestion = questions.getOrNull(currentQuestionIndex) ?: return@setState this
+                    val isCorrect = intent.answer == currentQuestion.correctAnswer
+                    val newScore = if (isCorrect) score + 1 else score
                     copy(
                         selectedAnswer = intent.answer,
                         isAnswerLocked = true,
@@ -99,26 +96,29 @@ class QuizViewModel(
             }
 
             QuizContract.Intent.NextQuestion -> {
-                val currentState = state.value
-                if (currentState.isLastQuestion) {
-                    setEffect {
-                        QuizContract.Effect.NavigateToResults(
-                            category = currentState.category,
-                            difficulty = currentState.difficulty,
-                            score = currentState.score,
-                            total = currentState.questions.size
+                var navigateEffect: QuizContract.Effect.NavigateToResults? = null
+                setState {
+                    if (isLastQuestion) {
+                        navigateEffect = QuizContract.Effect.NavigateToResults(
+                            category = category,
+                            difficulty = difficulty,
+                            score = score,
+                            total = questions.size
                         )
-                    }
-                } else {
-                    val nextIndex = currentState.currentQuestionIndex + 1
-                    setState {
+                        this
+                    } else if (currentQuestionIndex + 1 < questions.size) {
                         copy(
-                            currentQuestionIndex = nextIndex,
+                            currentQuestionIndex = currentQuestionIndex + 1,
                             selectedAnswer = null,
                             isAnswerLocked = false,
                             showCorrectAnswer = false
                         )
+                    } else {
+                        this
                     }
+                }
+                navigateEffect?.let { effect ->
+                    setEffect { effect }
                 }
             }
 
@@ -128,3 +128,4 @@ class QuizViewModel(
         }
     }
 }
+

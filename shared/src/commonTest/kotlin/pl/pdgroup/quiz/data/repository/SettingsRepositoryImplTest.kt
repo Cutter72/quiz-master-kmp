@@ -37,5 +37,12 @@ class SettingsRepositoryImplTest {
 
         assertTrue(repository.isDarkMode.first())
         assertTrue(repository.isHighContrast.first())
+
+        repository.toggleDarkMode()
+        repository.toggleHighContrast()
+
+        assertFalse(repository.isDarkMode.first())
+        assertFalse(repository.isHighContrast.first())
     }
 }
+
