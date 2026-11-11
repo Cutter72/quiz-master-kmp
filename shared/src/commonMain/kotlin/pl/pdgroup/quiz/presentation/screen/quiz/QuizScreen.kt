@@ -803,15 +803,17 @@ private fun AnswerOptionsLayout(
     }
 }
 
+private class RetainedValue<T>(var value: T)
+
 @Composable
 fun QuizResultFeedback(
     state: QuizContract.State,
     onIntent: (QuizContract.Intent) -> Unit
 ) {
     val reduceMotion = rememberPrefersReducedMotion()
-    val retainedIsCorrect = remember { mutableStateOf(state.isCorrect) }
-    val retainedShowCorrectAnswer = remember { mutableStateOf(state.showCorrectAnswer) }
-    val retainedCorrectAnswer = remember { mutableStateOf(state.currentQuestion?.correctAnswer) }
+    val retainedIsCorrect = remember { RetainedValue(state.isCorrect) }
+    val retainedShowCorrectAnswer = remember { RetainedValue(state.showCorrectAnswer) }
+    val retainedCorrectAnswer = remember { RetainedValue(state.currentQuestion?.correctAnswer) }
 
     if (state.isAnswerLocked) {
         retainedIsCorrect.value = state.isCorrect
@@ -911,7 +913,7 @@ fun QuizActionButtons(
     onIntent: (QuizContract.Intent) -> Unit
 ) {
     val reduceMotion = rememberPrefersReducedMotion()
-    val retainedIsLastQuestion = remember { mutableStateOf(state.isLastQuestion) }
+    val retainedIsLastQuestion = remember { RetainedValue(state.isLastQuestion) }
 
     if (state.isAnswerLocked) {
         retainedIsLastQuestion.value = state.isLastQuestion
