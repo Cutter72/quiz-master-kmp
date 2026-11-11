@@ -112,6 +112,7 @@ import quizmaster.shared.generated.resources.a11y_incorrect_answer
 import quizmaster.shared.generated.resources.back
 import quizmaster.shared.generated.resources.quiz_btn_next_question
 import quizmaster.shared.generated.resources.quiz_btn_view_results
+import quizmaster.shared.generated.resources.quiz_category_difficulty_a11y
 import quizmaster.shared.generated.resources.quiz_correct_answer_prefix
 import quizmaster.shared.generated.resources.quiz_exit_dialog_exit
 import quizmaster.shared.generated.resources.quiz_exit_dialog_message
@@ -535,11 +536,12 @@ fun QuizHeader(
 fun QuizCategoryChips(category: QuizCategory, difficulty: Difficulty) {
     val categoryLabel = stringResource(category.toStringRes())
     val difficultyLabel = stringResource(difficulty.toStringRes())
+    val a11yDescription = stringResource(Res.string.quiz_category_difficulty_a11y, categoryLabel, difficultyLabel)
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.clearAndSetSemantics {
-            contentDescription = "$categoryLabel, $difficultyLabel"
+            contentDescription = a11yDescription
         }
     ) {
         AssistChip(
