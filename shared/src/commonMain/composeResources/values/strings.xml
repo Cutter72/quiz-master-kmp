@@ -61,7 +61,7 @@
     <string name="result_not_bad">Not Bad! 💪</string>
     <string name="result_keep_practicing">Keep Practicing! 📚</string>
     <string name="result_score_fraction">%1$d/%2$d</string>
-    <string name="result_pct_correct">%1$d%% Correct</string>
+    <string name="result_pct_correct">%1$d% Correct</string>
     <string name="result_category_fmt">Category: %1$s</string>
     <string name="result_difficulty_fmt">Difficulty: %1$s</string>
     <string name="result_btn_try_another">Try Another Quiz</string>
@@ -73,7 +73,7 @@
     <string name="scoreboard_stat_quizzes">Quizzes</string>
     <string name="scoreboard_stat_average">Average</string>
     <string name="scoreboard_stat_best">Best</string>
-    <string name="scoreboard_percentage_fmt">%1$s%%</string>
+    <string name="scoreboard_percentage_fmt">%1$s%</string>
     <string name="scoreboard_score_denominator">/%1$d</string>
     <string name="scoreboard_empty_title">No scores yet</string>
     <string name="scoreboard_empty_subtitle">Complete a quiz to see your scores here</string>
