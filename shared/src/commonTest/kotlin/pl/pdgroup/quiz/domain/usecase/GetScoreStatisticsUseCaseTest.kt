@@ -54,4 +54,19 @@ class GetScoreStatisticsUseCaseTest {
         assertEquals(70.0, result.averageScore, 0.0)
         assertEquals(70, result.bestScore)
     }
+
+    @Test
+    fun invoke_ignores_zero_totalQuestions_to_avoid_NaN() {
+        val scores = listOf(
+            QuizScore(QuizCategory.SCIENCE_AND_NATURE, Difficulty.EASY, 0, 0, "2023-10-01T10:00:00Z"),
+            QuizScore(QuizCategory.GEOGRAPHY, Difficulty.MEDIUM, 8, 10, "2023-10-02T10:00:00Z")
+        )
+
+        val result = getScoreStatisticsUseCase(scores)
+
+        assertEquals(2, result.totalQuizzes)
+        assertEquals(80.0, result.averageScore, 0.0001)
+        assertEquals(80, result.bestScore)
+    }
 }
+
