@@ -37,7 +37,7 @@ fun App() {
     }
 
     val mainViewModel: MainViewModel = koinViewModel()
-    val themeState by mainViewModel.themeState.collectAsStateWithLifecycle()
+    val themeState by mainViewModel.state.collectAsStateWithLifecycle()
 
     QuizTheme(
         darkTheme = themeState.isDarkMode,

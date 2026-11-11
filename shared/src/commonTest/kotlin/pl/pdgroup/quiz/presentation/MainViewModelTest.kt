@@ -4,7 +4,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -37,30 +36,20 @@ class MainViewModelTest {
 
     @Test
     fun toggleTheme_toggles_isDarkMode() = runTest {
-        val collectJob = backgroundScope.launch(testDispatcher) {
-            viewModel.themeState.collect {}
-        }
+        assertFalse(viewModel.state.value.isDarkMode)
 
-        assertFalse(viewModel.themeState.value.isDarkMode)
+        viewModel.onIntent(MainContract.Intent.ToggleTheme)
 
-        viewModel.toggleTheme()
-
-        assertTrue(viewModel.themeState.value.isDarkMode)
-        collectJob.cancel()
+        assertTrue(viewModel.state.value.isDarkMode)
     }
 
     @Test
     fun toggleContrast_toggles_isHighContrast() = runTest {
-        val collectJob = backgroundScope.launch(testDispatcher) {
-            viewModel.themeState.collect {}
-        }
+        assertFalse(viewModel.state.value.isHighContrast)
 
-        assertFalse(viewModel.themeState.value.isHighContrast)
+        viewModel.onIntent(MainContract.Intent.ToggleContrast)
 
-        viewModel.toggleContrast()
-
-        assertTrue(viewModel.themeState.value.isHighContrast)
-        collectJob.cancel()
+        assertTrue(viewModel.state.value.isHighContrast)
     }
 }
 
