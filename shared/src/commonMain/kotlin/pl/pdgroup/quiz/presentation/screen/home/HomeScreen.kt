@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.outlined.Contrast
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material.icons.outlined.Quiz
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -242,7 +243,7 @@ fun HomeHeroSection(isCompactHeight: Boolean = false) {
     }
 
     Icon(
-        imageVector = Icons.AutoMirrored.Filled.List,
+        imageVector = Icons.Outlined.Quiz,
         contentDescription = null,
         tint = MaterialTheme.colorScheme.primary,
         modifier = Modifier
