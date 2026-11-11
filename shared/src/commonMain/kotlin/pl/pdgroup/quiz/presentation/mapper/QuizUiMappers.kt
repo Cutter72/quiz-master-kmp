@@ -22,6 +22,7 @@ import quizmaster.shared.generated.resources.difficulty_hard
 import quizmaster.shared.generated.resources.difficulty_medium
 import quizmaster.shared.generated.resources.error_database
 import quizmaster.shared.generated.resources.error_network
+import quizmaster.shared.generated.resources.error_rate_limited
 import quizmaster.shared.generated.resources.error_server
 import quizmaster.shared.generated.resources.error_unknown
 import quizmaster.shared.generated.resources.quiz_not_enough_questions
@@ -71,6 +72,7 @@ fun Throwable.toUiText(): UiText = when (this) {
         args = listOf(category.toStringRes(), difficulty.toStringRes(), foundCount)
     )
     is QuizException.NetworkError -> UiText.Resource(Res.string.error_network)
+    is QuizException.RateLimited -> UiText.Resource(Res.string.error_rate_limited)
     is QuizException.ServerError -> UiText.Resource(
         res = Res.string.error_server,
         args = listOf(statusCode)
@@ -79,3 +81,4 @@ fun Throwable.toUiText(): UiText = when (this) {
     is QuizException.UnknownError -> UiText.Resource(Res.string.error_unknown)
     else -> UiText.Resource(Res.string.error_unknown)
 }
+

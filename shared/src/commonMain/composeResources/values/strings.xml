@@ -7,6 +7,7 @@
     <string name="retry">Retry</string>
     <string name="error_unknown">An unknown error occurred</string>
     <string name="error_network">Network connection error. Please check your internet connection and try again.</string>
+    <string name="error_rate_limited">Too many requests. Please wait a few seconds and try again.</string>
     <string name="error_server">Server error (%1$d). Please try again later.</string>
     <string name="error_database">Failed to save quiz score locally.</string>
     <string name="quiz_loading_questions">Loading questions...</string>

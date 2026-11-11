@@ -111,9 +111,24 @@ class QuizRepositoryImplTest {
         assertEquals(1, fakeApi.callCount)
 
         fakeApi.exceptionToThrow = IOException("Offline")
-        val fallback = repository.getQuestions(QuizCategory.SPORTS, Difficulty.EASY, forceRefresh = true)
-        assertTrue(fallback.isSuccess)
-        assertEquals(7, fallback.getOrNull()?.size)
+        val forcedWhenOffline = repository.getQuestions(QuizCategory.SPORTS, Difficulty.EASY, forceRefresh = true)
+        assertTrue(forcedWhenOffline.isFailure)
+        assertIs<QuizException.NetworkError>(forcedWhenOffline.exceptionOrNull())
+
+        val cachedStillAvailable = repository.getQuestions(QuizCategory.SPORTS, Difficulty.EASY, forceRefresh = false)
+        assertTrue(cachedStillAvailable.isSuccess)
+        assertEquals(7, cachedStillAvailable.getOrNull()?.size)
+    }
+
+    @Test
+    fun getQuestions_maps_responseCode_5_to_RateLimited_without_retry_or_cache_poisoning() = runTest {
+        fakeApi.responseToReturn = OpenTdbResponse(responseCode = 5, results = emptyList())
+
+        val result = repository.getQuestions(QuizCategory.SPORTS, Difficulty.EASY, forceRefresh = true)
+
+        assertTrue(result.isFailure)
+        assertIs<QuizException.RateLimited>(result.exceptionOrNull())
+        assertEquals(1, fakeApi.callCount)
     }
 }
 

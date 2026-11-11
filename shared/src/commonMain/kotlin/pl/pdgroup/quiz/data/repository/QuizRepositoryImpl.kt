@@ -58,42 +58,55 @@ class QuizRepositoryImpl(
                         difficulty = diffString
                     )
 
-                    if (apiResponse.responseCode != 0 || apiResponse.results.size < 7) {
-                        val fallbackResponse = openTdbApi.getQuestions(
-                            amount = 10,
-                            category = categoryId,
-                            difficulty = diffString
-                        )
-                        if (fallbackResponse.responseCode == 0 && fallbackResponse.results.isNotEmpty()) {
-                            apiResponse = fallbackResponse
+                    when (apiResponse.responseCode) {
+                        0, 1 -> {
+                            if (apiResponse.responseCode != 0 || apiResponse.results.size < 7) {
+                                val fallbackResponse = openTdbApi.getQuestions(
+                                    amount = 10,
+                                    category = categoryId,
+                                    difficulty = diffString
+                                )
+                                when (fallbackResponse.responseCode) {
+                                    0 -> if (fallbackResponse.results.isNotEmpty()) {
+                                        apiResponse = fallbackResponse
+                                    }
+                                    1 -> Unit
+                                    5 -> throw QuizException.RateLimited()
+                                    else -> throw QuizException.ServerError(fallbackResponse.responseCode)
+                                }
+                            }
                         }
+                        5 -> throw QuizException.RateLimited()
+                        else -> throw QuizException.ServerError(apiResponse.responseCode)
                     }
 
                     val questions = apiResponse.results.map { dto ->
                         dto.toDomain()
                     }
 
-                    cacheEntry = QuestionCacheEntry(
-                        category = category,
-                        difficulty = difficulty,
-                        questions = questions
-                    )
+                    if (questions.isNotEmpty()) {
+                        cacheEntry = QuestionCacheEntry(
+                            category = category,
+                            difficulty = difficulty,
+                            questions = questions
+                        )
+                    }
 
                     Result.success(questions)
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: ResponseException) {
-                    fallbackCachedOrFailure(existing, category, difficulty) {
+                    fallbackCachedOrFailure(existing, category, difficulty, forceRefresh) {
                         QuizException.ServerError(e.response.status.value, e)
                     }
                 } catch (e: IOException) {
-                    fallbackCachedOrFailure(existing, category, difficulty) {
+                    fallbackCachedOrFailure(existing, category, difficulty, forceRefresh) {
                         QuizException.NetworkError(e)
                     }
                 } catch (e: QuizException) {
-                    Result.failure(e)
+                    fallbackCachedOrFailure(existing, category, difficulty, forceRefresh) { e }
                 } catch (e: Exception) {
-                    fallbackCachedOrFailure(existing, category, difficulty) {
+                    fallbackCachedOrFailure(existing, category, difficulty, forceRefresh) {
                         QuizException.UnknownError(e)
                     }
                 }
@@ -105,9 +118,10 @@ class QuizRepositoryImpl(
         existing: QuestionCacheEntry?,
         category: QuizCategory,
         difficulty: Difficulty,
+        forceRefresh: Boolean,
         errorProvider: () -> QuizException
     ): Result<List<Question>> {
-        return if (existing != null && existing.category == category && existing.difficulty == difficulty) {
+        return if (!forceRefresh && existing != null && existing.category == category && existing.difficulty == difficulty) {
             Result.success(existing.questions)
         } else {
             Result.failure(errorProvider())
