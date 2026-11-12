@@ -82,9 +82,12 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.compose.uiTest)
         }
         getByName("androidDeviceTest").dependencies {
             implementation(libs.androidx.testRunner)
+            implementation(libs.androidx.espresso.core)
+            implementation(libs.androidx.compose.ui.test.manifest)
         }
     }
 }
