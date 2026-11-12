@@ -1,31 +1,38 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# Quiz Master
 
-* [/iosApp](./iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+### PL
 
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
+Wieloplatformowa aplikacja (Kotlin Multiplatform) na systemy Android oraz iOS pozwalająca na grę w quizy,
+oparta na API [OpenTDB](https://opentdb.com/). Wykorzystuje współdzielony interfejs użytkownika (Compose Multiplatform), architekturę MVI oraz Clean Architecture.
+Za komunikację sieciową odpowiada Ktor, a dane lokalne są przechowywane przy użyciu bazy danych Room KMP oraz DataStore.
 
-### Running the apps
+### EN
 
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and options:
+Cross-platform (Kotlin Multiplatform) Android & iOS app for playing quizzes, based on the [OpenTDB](https://opentdb.com/) API.
+Built with a shared UI toolkit (Compose Multiplatform), following MVI and Clean Architecture.
+Uses Ktor for networking and Room KMP with DataStore for local data persistence.
 
-- Android app: `./gradlew :androidApp:assembleDebug`
-- iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+### Technologie/Technologies:
 
-### Running tests
+* Android & iOS
+* Kotlin Multiplatform (KMP)
+* Compose Multiplatform (Material Design 3)
+* MVI + Clean Architecture
+* Navigation Compose (Type-Safe Navigation)
+* Kotlin Coroutines & Flow
+* Kotlinx Serialization & Datetime
+* Koin (Dependency Injection)
+* Ktor Client (OkHttp & Darwin)
+* Room KMP (`BundledSQLiteDriver`)
+* DataStore Preferences
+* Ksoup (HTML Entities decode)
+* Kotlin Test & Coroutines Test
+* Gradle
+* Git
 
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
+### Installation [APK](https://github.com/Cutter72/quiz-master/releases/download/0.9.0/app-release-unsigned.apk)
 
-- Android tests: `./gradlew :shared:testAndroidHostTest`
-- iOS tests: `./gradlew :shared:iosSimulatorArm64Test`
+### Screenshots
 
----
-
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+![Screenshots 1](screenshots/1.jpg)
+![Screenshots 2](screenshots/2.jpg)
