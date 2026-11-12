@@ -9,6 +9,7 @@
 4. [Type-Safe Navigation (
    `androidx.navigation.compose`)](#4-type-safe-navigation-androidxnavigationcompose)
 5. [Compose Stability & Previews](#5-compose-stability--previews)
+6. [UI Semantics First & Fallback `Modifier.testTag` (SSOT)](#6-ui-semantics-first--fallback-modifiertesttag-ssot)
 
 ## 1. Stateful Route vs Stateless Screen Separation
 
@@ -172,3 +173,28 @@ composable<FeatureListRoute> {
   the root layout node.
 - Add `@Preview` functions for `FeatureScreen` covering key states (loading, content, error) using
   sample `FeatureContract.State` instances and `onIntent = {}`.
+
+## 6. UI Semantics First & Fallback `Modifier.testTag` (SSOT)
+
+1. **Prioritize Compose Semantics Over `Modifier.testTag`**:
+   Design `@Composable` components so UI tests and screen readers (TalkBack / VoiceOver) can target
+   them via natural semantics (`Text`, localized `contentDescription` on `Icon` / `IconButton` /
+   `FloatingActionButton`, `Role`, `semantics {}`) rather than cluttering production modifiers with
+   `Modifier.testTag(...)`.
+2. **Treat `Modifier.testTag` as a Last-Resort Fallback (SSOT)**:
+   Only attach `Modifier.testTag(...)` when semantic properties cannot uniquely identify a node
+   (e.g., structural containers like `LazyColumn` or disambiguating repeated cards). When a fallback
+   `testTag` is needed, never hardcode raw string literals—define them inside an `internal object`
+   in `commonMain` so `commonTest` can reference the same constants without exposing them to
+   `:androidApp` or the exported iOS framework.
+3. **`const val` for Static Tags & Functions for Dynamic Tags**:
+   Use `const val` for static elements and helper functions for list items (e.g.,
+   `fun playerCard(id: Long) = "players_screen_player_card_$id"`).
+4. **Prefix with Full Screen or Component Name**:
+   Always include the full container name and its qualifier (`_screen_`, `_card_`, `_dialog_`,
+   `_bottom_sheet_`) in the tag value:
+   - Good: `"players_screen_empty_list"`, `"players_card_empty_list"`, `"history_screen_empty_list"`
+   - Bad: `"empty_list"` or `"players_empty_list"` (causes collisions if a screen and a sub-card
+     both render a player list or empty state).
+   For reusable components (such as `AppEmptyList`), pass the contextual `testTag` from the caller
+   or apply `Modifier.testTag(...)` via the component's `modifier` parameter.

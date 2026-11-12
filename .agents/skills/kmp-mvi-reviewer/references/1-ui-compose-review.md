@@ -63,5 +63,16 @@
 - **Lazy List Keys (`[WARNING]`)**: Flag `LazyColumn` or `LazyRow` `items(state.items)` calls that
   omit `key = { it.id }`. Without stable keys, list mutations trigger full-item recompositions and
   break scroll state.
+- **Semantics-First Testing & Fallback `testTag` SSOT (`[WARNING]`)**:
+    - Flag unnecessary `Modifier.testTag(...)` / `onNodeWithTag(...)` usages on elements that can
+      and should be queried via semantics (`onNodeWithText`, `onNodeWithContentDescription`,
+      `hasSetTextAction()`, `Role`) and ensure icon buttons provide a localized
+      `contentDescription`.
+    - When a fallback `testTag` is genuinely required (e.g., structural containers like `LazyColumn`
+      or repeating cards), flag hardcoded string literals inside `Modifier.testTag("...")` or
+      `onNodeWithTag("...")`. Require `internal` `const val` constants (and functions for dynamic IDs
+      like `fun playerCard(id: Long)`) prefixed with the full screen or component name including its
+      qualifier (e.g., `players_screen_empty_list`, `players_card_empty_list` — never generic
+      `empty_list` or ambiguous `players_empty_list`).
 - **Modifier Hygiene (`[NIT]`)**: Ensure `FeatureScreen` and reusable composables accept
   `modifier: Modifier = Modifier` and apply it to their root layout.

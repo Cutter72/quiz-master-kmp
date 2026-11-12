@@ -82,5 +82,10 @@ Whenever you generate or modify code with this skill, always provide:
    than manual `.replace()` / regex chains.
 3. Corresponding `<string name="...">...</string>` XML entries for
    `commonMain/composeResources/values/strings.xml` whenever new user-facing text is added.
-4. Koin DI module registrations (`viewModelOf`, `factoryOf`, `singleOf`) for all newly introduced
+4. Meaningful Compose accessibility semantics (`contentDescription` on icon controls, semantic roles)
+   for UI testing first, and—only where a fallback `Modifier.testTag(...)` is required—`internal`
+   `const val` constants (and dynamic tag helper functions) prefixed with the full screen or
+   component name (`players_screen_empty_list`, `players_card_empty_list`) instead of hardcoded raw
+   string literals.
+5. Koin DI module registrations (`viewModelOf`, `factoryOf`, `singleOf`) for all newly introduced
    classes.

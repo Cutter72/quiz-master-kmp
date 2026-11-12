@@ -60,6 +60,11 @@ Evaluate findings strictly according to these severity tiers:
     - Hardcoding `Dispatchers.IO` or `Dispatchers.Main` instead of injecting `DispatcherProvider`.
     - Using `collectAsState()` instead of lifecycle-aware `collectAsStateWithLifecycle()`.
     - Missing `key` parameter in `LazyColumn` / `LazyRow` `items(...)` calls.
+    - Overusing `Modifier.testTag(...)` on elements that should be matched by semantics (`text`,
+      `contentDescription`, `Role`), hardcoded raw string literals in `Modifier.testTag("...")` /
+      `onNodeWithTag("...")` instead of `internal` `const val` constants or helper functions, or
+      fallback test tags missing the full screen/component qualifier prefix (e.g.,
+      `players_screen_empty_list`, `players_card_empty_list`).
 - **[NIT]**: Minor idiomatic Kotlin, Compose styling, or Koin DSL improvements:
     - Missing default `modifier: Modifier = Modifier` parameter on reusable composables.
     - Verbose Koin `single { ... }` blocks where Constructor DSL

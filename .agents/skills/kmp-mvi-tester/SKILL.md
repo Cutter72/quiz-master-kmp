@@ -29,6 +29,21 @@ inside `commonTest`. Follow these rules to ensure tests compile and execute clea
       linking frequently fails or crashes when identifiers contain spaces or special punctuation.
       Always use clean `snake_case` or `camelCase` without spaces (e.g.,
       `fun whenOnRefreshSucceeds_emitsLoadingThenContentState()`).
+3. **Semantics-First UI Testing & Fallback `testTag` SSOT**:
+    - **Always prioritize Compose Semantics over `testTag`**: Locate and assert UI elements using
+      semantic matchers first (`onNodeWithText`, `onNodeWithContentDescription`,
+      `hasSetTextAction()`, `hasClickAction()`, `Role`, `ProgressBarRangeInfo`). Resolve localized
+      strings in `runComposeUiTest` via `getString(Res.string.xyz)` so tests verify real user-facing
+      accessibility and text rather than synthetic tags.
+    - **Use `testTag` only as a last-resort fallback** (e.g., structural containers like
+      `LazyColumn` that have no natural text/accessibility semantics, or disambiguating identical
+      repeated nodes).
+    - When a fallback `testTag` is genuinely needed, never duplicate hardcoded `testTag` strings
+      across `commonMain` and `commonTest`. Reference `internal` `const val` constants or helper
+      functions (`fun playerCard(id: Long)`) defined in `commonMain`, and always prefix tag values
+      with the **full screen or component name** including its qualifier (e.g.,
+      `players_screen_empty_list`, `players_card_empty_list`, `history_screen_empty_list` — never
+      generic `empty_list` or ambiguous `players_empty_list`).
 
 ## 2. Reference Routing Guide (Read Before Testing)
 

@@ -51,8 +51,8 @@ class FeatureViewModelTest {
 
     @Test
     fun whenOnRefreshSucceeds_emitsLoadingThenContentState() = runTest(testDispatcher) {
-        val domainItems =
-            listOf(Item(id = "1", title = "Kotlin", category = "Tech", authorName = "Dev"))
+      val domainItems =
+        listOf(Item(id = "1", title = "Kotlin", category = "Tech", authorName = "Dev"))
         fakeRepo.givenSuccess(domainItems)
 
         viewModel.state.test {
@@ -65,12 +65,12 @@ class FeatureViewModelTest {
             assertEquals(FeatureContract.State(isLoading = true), awaitItem())
 
             // Content state with mapped UI models
-            val expectedUiModels =
-                listOf(ItemUiModel(id = "1", title = "Kotlin", formattedSubtitle = "Tech • Dev"))
-            assertEquals(
-                FeatureContract.State(isLoading = false, items = expectedUiModels),
-                awaitItem()
-            )
+          val expectedUiModels =
+            listOf(ItemUiModel(id = "1", title = "Kotlin", formattedSubtitle = "Tech • Dev"))
+          assertEquals(
+            FeatureContract.State(isLoading = false, items = expectedUiModels),
+            awaitItem()
+          )
 
             cancelAndIgnoreRemainingEvents()
         }
