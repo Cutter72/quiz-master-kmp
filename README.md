@@ -30,9 +30,9 @@ Uses Ktor for networking and Room KMP with DataStore for local data persistence.
 * Gradle
 * Git
 
-### Installation [APK](https://github.com/Cutter72/quiz-master/releases/download/0.9.0/app-release-unsigned.apk)
+### Android installation [APK](https://github.com/Cutter72/quiz-master-kmp/releases/download/1.0.0/androidApp-release.apk)
 
 ### Screenshots
 
-![Screenshots 1](screenshots/1.jpg)
-![Screenshots 2](screenshots/2.jpg)
+![QuizMaster_screenshot_gallery_dark](screenshots/QuizMaster_screenshot_gallery_dark.png)
+![QuizMaster_screenshot_gallery_light](screenshots/QuizMaster_screenshot_gallery_light.png)
